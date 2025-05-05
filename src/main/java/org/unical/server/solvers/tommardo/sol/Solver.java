@@ -5,7 +5,7 @@ import org.unical.server.Solvable;
 import org.unical.server.Input;
 
 @Component
-public class ThommardoSolver implements Solvable {
+public class Solver implements Solvable {
     @Override
     public String solve(Input input) {
         return "";
