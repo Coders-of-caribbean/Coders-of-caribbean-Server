@@ -12,13 +12,11 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 @SpringBootApplication
-//scansiono i Bean a partire da org.unical.server.solvers: I BEAN DOVRANNO ESSERE QUI DENTRO!
-@ComponentScan(basePackages = "org.unical.server.solvers")
 public class ServerApplication {
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
 
-        Map<String, Solvable> solvers = context.getBeansOfType(Solvable.class);
+        Map<String, ResponseSolver> solvers = context.getBeansOfType(ResponseSolver.class);
 
         System.out.println("=== Solvers registrati ===");
         solvers.forEach((name, bean) -> {

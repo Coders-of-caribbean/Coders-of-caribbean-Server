@@ -12,16 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value = "api/v1/", consumes = "application/json")
+@RequestMapping(value = "/api/v1", consumes = "application/json")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @AllArgsConstructor
 public class Controller {
     // grazie a @ComponentScan e a @Component, Spring individuerà tutti i bean e li popolerà nella lista.
     //ovviamente, viene definita nel costruttore!
-    private List<Solvable> solvers;
-
-    //applicationContext è quell'oggetto che memorizza e gestisce tutti i bean.
-    private ApplicationContext applicationContext;
+    private List<ResponseSolver> solvers;
 
     @PostMapping(path="/solve", produces = "application/json")
     public ResponseEntity<Output> solve(@RequestBody Input input) {
@@ -29,7 +26,7 @@ public class Controller {
 
         solvers.forEach(s -> {
             String result = s.solve(input);
-            String solverName = (String)applicationContext.getBean(s.getClass().getName());
+            String solverName = s.getBeanName();
             output.getResult().put(solverName, result);
         });
 
