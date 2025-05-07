@@ -1,6 +1,7 @@
 package org.unical.server;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -14,7 +15,6 @@ import java.util.Map;
 //scansiono i Bean a partire da org.unical.server.solvers: I BEAN DOVRANNO ESSERE QUI DENTRO!
 @ComponentScan(basePackages = "org.unical.server.solvers")
 public class ServerApplication {
-
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
 
