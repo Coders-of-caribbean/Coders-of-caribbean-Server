@@ -2,7 +2,7 @@ package org.unical.server.solvers.tommardo.sol;
 
 import org.springframework.stereotype.Component;
 import org.unical.server.Solvable;
-import org.unical.server.Input;
+import org.unical.server.model.Input;
 
 @Component
 public class Solver implements Solvable {

@@ -1,7 +1,7 @@
 package org.unical.server.solvers.example;
 
 import org.springframework.stereotype.Component;
-import org.unical.server.Input;
+import org.unical.server.model.Input;
 import org.unical.server.Solvable;
 
 //NOTA: classe usata a solo scopo di esempio.
