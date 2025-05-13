@@ -29,9 +29,15 @@ public class Controller {
         Output output = new Output();
 
         solvers.forEach(s -> {
-            String result = s.solve(input);
+            //TODO realize an ExceptionHandler class
+            String result;
+            try {
+                result = s.solve(input);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             String solverName = s.getBeanName();
-            output.getResult().put(solverName, result);
+            output.insert(solverName, result);
         });
 
         return ResponseEntity.ok(output);
