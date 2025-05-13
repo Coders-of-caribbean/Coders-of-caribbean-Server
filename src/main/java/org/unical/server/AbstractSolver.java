@@ -8,8 +8,6 @@ import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
 
-import java.io.File;
-
 /*
 **** SOSTITUITA ALL'INTERFACCIA SOLVABLE ****
 * Implemento BeanNameAware, interfaccia che permette di spefificare all'interno dell'oggetto
@@ -37,19 +35,26 @@ import java.io.File;
 
 @Getter
 @Setter
-public abstract class Solver implements BeanNameAware {
-    private Handler handler;
+public abstract class AbstractSolver implements BeanNameAware {
+    protected Handler handler;
+    @Getter
     private String beanName;
 
-    public Solver() {
+    public AbstractSolver() {
         String binary = getBinary();
         handler = new DesktopHandler(new DLV2DesktopService("lib/" + binary));
     }
     private String getBinary(){
         String system = System.getProperty("os.name");
         if(system.startsWith("Windows")) return "dlv2.exe";
-        if(system.startsWith("Mac")) return "dlv2.bin";
-        if(system.startsWith("Linux")) return "dlv2.bin";
+        if(system.startsWith("Linux")) return "binario_x_massimo";
+
+        if(system.startsWith("Mac")){
+            String arch = System.getProperty("os.arch");
+            if(arch.contains("aarch64") || arch.contains("arm64")) return "binario_x_riccardo";
+            return "dlv2-intel.mac";
+        }
+
         throw new RuntimeException("Unsupported system: " + system);
     }
 
