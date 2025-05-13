@@ -33,7 +33,7 @@ import org.unical.server.model.Input;
 @Getter
 @Setter
 public abstract class ResponseSolver implements BeanNameAware {
-    private String beanName;
+    protected String beanName;
 
-    public abstract String solve(Input input);
+    public abstract String solve(Input input) throws Exception;
 }
