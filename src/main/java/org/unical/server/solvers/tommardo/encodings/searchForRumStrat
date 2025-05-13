@@ -1,0 +1,10 @@
+%a simple example.
+
+rows(1..23).
+cols(1..21).
+speed(0..2).
+cell(X,Y) :- rows(X), cols(Y).
+
+{sol(X,Y,Speed) : cell(X,Y), speed(Speed)} = 1.
+
+%constraints...
