@@ -11,6 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Input {
     private List<Barrel> barrels;
-    private List<Bomb> mines;
+    private List<Bomb> bombs;
     private List<Ship> ships;
 }
