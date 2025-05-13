@@ -9,10 +9,7 @@ import org.unical.server.command.Command;
 import org.unical.server.model.Input;
 import org.unical.server.model.Output;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @RestController
 //@RequestMapping(value = "api/v1/", consumes = "application/json")
@@ -47,5 +44,24 @@ public class Controller {
         Command cmd = new Command();
         cmd.generateRandomCommand();
         return cmd;
+    }
+
+    @PostMapping(path="/random/command/multiple", consumes = "application/json")
+    public ResponseEntity<List<Command>> randomCommandMultiple(@RequestBody(required = false) Map<String, Object> requestData) {
+        // Stampa il JSON ricevuto per debug
+        if (requestData != null) {
+            System.out.println("Received JSON data: " + requestData);
+
+            // Puoi accedere ai campi specifici del JSON qui
+            // Esempio: if (requestData.containsKey("someField")) { ... }
+        }
+
+        List<Command> commands = new ArrayList<>();
+        commands.add(new Command());
+        commands.add(new Command());
+        commands.get(0).generateRandomCommand();
+        commands.get(1).generateRandomCommand();
+
+        return ResponseEntity.ok(commands);
     }
 }

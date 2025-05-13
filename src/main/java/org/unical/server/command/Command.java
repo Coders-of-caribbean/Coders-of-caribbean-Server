@@ -13,11 +13,11 @@ public class Command {
         String move = "MOVE";
         String wait = "WAIT";
         Random random = new Random();
-        int dir = random.nextInt(6) + 1;
+        int dir = random.nextInt(6);
         int speed = random.nextInt(3);
         int choice = random.nextInt(2);
 
-        if(choice % 2 == 0) {
+        if(true) {
             command = move +  " " + dir + " " + speed;
         } else {
             command = wait;
