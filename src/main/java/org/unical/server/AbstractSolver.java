@@ -51,7 +51,7 @@ public abstract class AbstractSolver implements BeanNameAware {
 
         if(system.startsWith("Mac")){
             String arch = System.getProperty("os.arch");
-            if(arch.contains("aarch64") || arch.contains("arm64")) return "binario_x_riccardo";
+            if(arch.contains("aarch64") || arch.contains("arm64")) return "dlv2.mac_5";
             return "dlv2-intel.mac";
         }
 
