@@ -36,6 +36,20 @@
         </dependency>
 
         <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.7.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>it.unical.mat</groupId>
+            <artifactId>emb-asp</artifactId>
+            <version>7.5.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/embASP.jar</systemPath>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
