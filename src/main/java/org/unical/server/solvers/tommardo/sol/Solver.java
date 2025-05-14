@@ -18,7 +18,7 @@ import org.unical.server.solvers.tommardo.facts.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Component
+@Component("niqqas")
 public class Solver extends ResponseSolver {
 
     private Handler handler;
