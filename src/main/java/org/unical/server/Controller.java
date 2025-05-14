@@ -59,8 +59,10 @@ public class Controller {
         List<Command> commands = new ArrayList<>();
         commands.add(new Command());
         commands.add(new Command());
+        commands.add(new Command());
         commands.get(0).generateRandomCommand();
         commands.get(1).generateRandomCommand();
+        commands.get(2).generateRandomCommand();
 
         return ResponseEntity.ok(commands);
     }
