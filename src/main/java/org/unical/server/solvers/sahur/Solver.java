@@ -15,7 +15,7 @@ import org.unical.server.solvers.sahur.predicates.Move;
 import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
-@Component
+@Component("sahur")
 public class Solver extends AbstractSolver {
     private final Class<?>[] classes = {Move.class};
 

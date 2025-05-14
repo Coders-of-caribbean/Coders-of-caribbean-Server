@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 import org.unical.server.model.Input;
 
-@Component
+@Component("niqqas")
 public class Solver extends AbstractSolver {
 
     @Override
