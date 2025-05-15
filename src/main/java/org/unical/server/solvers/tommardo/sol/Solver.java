@@ -50,10 +50,11 @@ public class Solver extends AbstractSolver {
                 System.out.println("eccolo!");
                 SolutionFact sol = (SolutionFact) atom;
 
-                //return computeAction(sol, input.getShips().get(input.getShips().);
+                //given the solution, return the current string.
+                System.out.println(beanName + " " + sol.getX() + " "+ sol.getY()+" "+sol.getSpeed());
+                return beanName + " " + sol.getX() + " "+ sol.getY()+" "+sol.getSpeed();
             }
 
-            //5.given the solution, return the correct string.
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -90,9 +91,5 @@ public class Solver extends AbstractSolver {
         factsProgram.addObjectsInput(facts);
 
         handler.addProgram(factsProgram);
-    }
-
-    private String computeAction(SolutionFact newSol, Ship oldSol){
-        return "MOVE " + newSol.getX() + " " + newSol.getY() + " " + newSol.getSpeed();
     }
 }
