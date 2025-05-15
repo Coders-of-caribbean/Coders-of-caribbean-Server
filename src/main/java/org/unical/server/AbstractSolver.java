@@ -37,7 +37,6 @@ import org.unical.server.model.Input;
 @Setter
 public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
-    @Getter
     protected String beanName;
 
     public AbstractSolver() {
