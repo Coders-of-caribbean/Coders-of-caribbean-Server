@@ -1,10 +1,16 @@
 package org.unical.server.model;
 
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@Data
+@NoArgsConstructor
 public class PlayerData {
-    PlayerShip info;
+    PlayerShip playerInfo;
     private List<Barrel> barrels;
     private List<Mine> mines;
-    private List<EnemyShip> enemies;
+    private List<EnemyShip> enemiesInfo;
 }
