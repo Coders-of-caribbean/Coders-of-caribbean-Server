@@ -44,6 +44,7 @@ public class Solver extends AbstractSolver {
             handler.removeAll();
             inputProgram.addProgram("move(1..5,1..5,1).");
             handler.addProgram(inputProgram);
+            addFacts(inputProgram, input);
 
             AnswerSet result = getAnswerSet();
             assert result != null;
