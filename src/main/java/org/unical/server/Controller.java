@@ -17,7 +17,7 @@ import java.util.List;
 public class Controller {
     // grazie a @ComponentScan e a @Component, Spring individuerà tutti i bean e li popolerà nella lista.
     //ovviamente, viene definita nel costruttore!
-    private List<AbstractSolver> solvers;
+    private List<ResponseSolver> solvers;
 
     @PostMapping(path="/solve", produces = "application/json")
     public ResponseEntity<Output> solve(@RequestBody Input input) {
