@@ -1,6 +1,7 @@
 package org.unical.server;
 
 import it.unical.mat.embasp.base.Handler;
+import it.unical.mat.embasp.base.InputProgram;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import it.unical.mat.embasp.languages.asp.AnswerSets;
 import it.unical.mat.embasp.platforms.desktop.DesktopHandler;
@@ -10,9 +11,14 @@ import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
+import org.unical.server.predicates.Player;
 import org.unical.server.predicates.actions.Action;
+import org.unical.server.predicates.objects.Bomb;
+import org.unical.server.predicates.objects.Rum;
 
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /*
 **** SOSTITUITA ALL'INTERFACCIA SOLVABLE ****
@@ -82,13 +88,49 @@ public abstract class AbstractSolver implements BeanNameAware {
      *
      * @return un {@link AnswerSet} ottimo se esiste, un generico altrimenti.
      */
-
     protected AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
         try{
             return answerSets.getOptimalAnswerSets().getFirst();
         } catch (NoSuchElementException e){
             return answerSets.getAnswersets().getFirst();
+        }
+    }
+
+    /**
+     * Questa funzione è un utility che serve per aggiungere ad un {@link InputProgram},
+     * i fatti che sono presenti in {@link PlayerData}.
+     *
+     * @param program Program to add the facts
+     * @param input PlayerData
+     * @return {@link InputProgram} passato come parametro, oppure {@code null} se l'operazione non va a buon fine.
+     */
+    protected InputProgram addFacts(InputProgram program, PlayerData input){
+        assert input != null;
+        assert program != null;
+
+        try {
+            Set<Object> rum = input.getBarrels()
+                    .stream()
+                    .map((Rum::new))
+                    .collect(Collectors.toSet());
+
+            Set<Object> players = input.getEnemies()
+                    .stream()
+                    .map((Player::new))
+                    .collect(Collectors.toSet());
+
+            Set<Object> bombs = input.getMines()
+                    .stream()
+                    .map((Bomb::new))
+                    .collect(Collectors.toSet());
+
+            program.addObjectsInput(bombs);
+            program.addObjectsInput(players);
+            program.addObjectsInput(rum);
+            return program;
+        }catch (Exception e){
+            return null;
         }
     }
 
