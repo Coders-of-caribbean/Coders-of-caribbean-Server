@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
+import org.unical.server.model.PlayerData;
 
 /*
 **** SOSTITUITA ALL'INTERFACCIA SOLVABLE ****
@@ -50,12 +51,12 @@ public abstract class AbstractSolver implements BeanNameAware {
 
         if(system.startsWith("Mac")){
             String arch = System.getProperty("os.arch");
-            if(arch.contains("aarch64") || arch.contains("arm64")) return "binario_x_riccardo";
+            if(arch.contains("aarch64") || arch.contains("arm64")) return "dlv2.mac_5";
             return "dlv2-intel.mac";
         }
 
         throw new RuntimeException("Unsupported system: " + system);
     }
 
-    public abstract String solve(Input input);
+    public abstract String solve(PlayerData playerData);
 }

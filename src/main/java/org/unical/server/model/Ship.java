@@ -6,7 +6,8 @@ import lombok.NoArgsConstructor;
 import java.awt.*;
 
 @Data
-public class Ship extends Point{
-    private String name;
-    private int rum;
+public abstract class Ship extends Point{
+    protected int speed;
+    protected int rum;
+    protected int direction;
 }

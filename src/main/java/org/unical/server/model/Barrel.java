@@ -7,4 +7,5 @@ import java.awt.*;
 //EXTENSIBLE!
 @Data
 public class Barrel extends Point {
+    private int rum;
 }

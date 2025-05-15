@@ -9,6 +9,8 @@ import org.unical.server.model.Output;
 
 import java.util.List;
 
+//TODO realize an ExceptionHandler class
+
 @RestController
 //@RequestMapping(value = "api/v1/", consumes = "application/json")
 @RequestMapping(value="api/v1/")
@@ -24,10 +26,14 @@ public class Controller {
         Output output = new Output();
 
         solvers.forEach(s -> {
-            //TODO realize an ExceptionHandler class
             String result;
             try {
-                result = s.solve(input);
+                //assign just his player data (if present!)
+                if(input.getInput().containsKey(s.getBeanName()))
+                    result = s.solve(input.getInput().get(s.getBeanName()));
+                else
+                    //FIXME should launch an exception
+                    result = "!!! NO GAME INFO !!!";
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
