@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
+import org.unical.server.model.PlayerData;
 
 /*
 **** SOSTITUITA ALL'INTERFACCIA SOLVABLE ****
@@ -58,5 +59,5 @@ public abstract class AbstractSolver implements BeanNameAware {
         throw new RuntimeException("Unsupported system: " + system);
     }
 
-    public abstract String solve(Input input);
+    public abstract String solve(PlayerData playerData);
 }
