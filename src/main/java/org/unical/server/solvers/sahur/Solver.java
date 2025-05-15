@@ -10,32 +10,14 @@ import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
 import org.unical.server.model.PlayerData;
-import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 @Component("sahur")
 public class Solver extends AbstractSolver {
-    //private final Class<?>[] classes = {Move.class};
 
     public Solver() {
         super();
-        //registerClasses();
     }
-
-    /*
-    private void registerClasses() {
-        assert classes.length > 0 : "Com'è possibile che non hai nessuna classe da registrare?";
-
-        try {
-            for (Class<?> clazz : classes) {
-                ASPMapper.getInstance().registerClass(clazz);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Problems registering classes", e);
-        }
-    }
-
-     */
 
     @Override
     public String solve(PlayerData input) {
