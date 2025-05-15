@@ -6,15 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.unical.server.model.PlayerShip;
 import org.unical.server.model.Ship;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Id("player")
-public class Player {
+@Id("enemy")
+public class Enemy {
     @Param(0)
     private int x;
 
@@ -30,7 +29,7 @@ public class Player {
     @Param(4)
     private int direction;
 
-    public Player(Ship ship) {
+    public Enemy(Ship ship) {
         this.x = ship.x;
         this.y = ship.y;
         this.health = ship.getRum();
