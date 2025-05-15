@@ -11,7 +11,7 @@ public class ServerApplication {
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
 
-        Map<String, AbstractSolver> solvers = context.getBeansOfType(AbstractSolver.class);
+        Map<String, ResponseSolver> solvers = context.getBeansOfType(ResponseSolver.class);
 
         System.out.println("=== Solvers registrati ===");
         solvers.forEach((name, bean) -> {
