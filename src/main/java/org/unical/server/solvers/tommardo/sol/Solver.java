@@ -23,13 +23,13 @@ public class Solver extends AbstractSolver {
     }
 
     @Override
-    public String solve(Input input) {
+    public String solve(PlayerData data) {
         try{
             //1. class registration
             registerClasses();
 
             //2. fixed program (facts)
-            addFacts(input);
+            addFacts(data);
 
             //3. variable program (strat)
             InputProgram strat = new ASPInputProgram();
@@ -71,25 +71,28 @@ public class Solver extends AbstractSolver {
         instance.registerClass(SolutionFact.class);
     }
 
-    private void addFacts(Input input) throws Exception {
+    private void addFacts(PlayerData data) throws Exception {
         Set<Object> facts = new HashSet<>();
         InputProgram factsProgram = new ASPInputProgram();
 
-        for(Barrel b : input.getBarrels())
+        PlayerShip playerInfo = data.getPlayerInfo();
+        //player data
+        facts.add(new PlayerFact(playerInfo.x, playerInfo.y, playerInfo.getRum()));
+
+        //barrel data
+        for(Barrel b : data.getBarrels())
             facts.add(new BarrelFact(b.x,b.y));
 
-        for(Ship s : input.getShips()){
-            if(s.getName().equals(beanName))
-                facts.add(new PlayerFact(s.x,s.y,s.getRum()));
-            else
-                facts.add(new EnemyFact(s.x,s.y,s.getRum()));
+        //enemies data
+        for(Ship s : data.getEnemiesInfo()){
+            facts.add(new EnemyFact(s.x,s.y,s.getRum()));
         }
 
-        for(Bomb b : input.getBombs())
-            facts.add(new BombFact(b.x,b.y));
+        //mines data
+        for(Mine m : data.getMines())
+            facts.add(new BombFact(m.x,m.y));
 
         factsProgram.addObjectsInput(facts);
-
         handler.addProgram(factsProgram);
     }
 }

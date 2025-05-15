@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
 import org.unical.server.model.Input;
+import org.unical.server.model.PlayerData;
 import org.unical.server.solvers.sahur.predicates.Action;
 import org.unical.server.solvers.sahur.predicates.Move;
 import java.util.NoSuchElementException;
@@ -79,7 +80,7 @@ public class Solver extends AbstractSolver {
 
 
     @Override
-    public String solve(Input input) {
+    public String solve(PlayerData data) {
         InputProgram inputProgram = new ASPInputProgram();
         try {
             handler.removeAll();
