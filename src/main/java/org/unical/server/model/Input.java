@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +92,10 @@ import java.util.Map;
 * */
 
 @Data
-@NoArgsConstructor
 public class Input {
     private Map<String, PlayerData> input;
+
+    public Input(){
+        input = new HashMap<>();
+    }
 }
