@@ -7,7 +7,7 @@ import it.unical.mat.embasp.languages.asp.ASPMapper;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import it.unical.mat.embasp.languages.asp.AnswerSets;
 import org.springframework.stereotype.Component;
-import org.unical.server.AbstractSolver;
+import org.unical.server.ResponseSolver;
 
 import org.unical.server.model.Input;
 import org.unical.server.solvers.sahur.predicates.Action;
@@ -16,7 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 @Component("sahur")
-public class Solver extends AbstractSolver {
+public class Solver extends ResponseSolver {
     private final Class<?>[] classes = {Move.class};
 
     public Solver() {

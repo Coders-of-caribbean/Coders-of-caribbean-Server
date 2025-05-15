@@ -4,7 +4,10 @@ import it.unical.mat.embasp.base.Handler;
 import it.unical.mat.embasp.base.InputProgram;
 import it.unical.mat.embasp.base.OptionDescriptor;
 import it.unical.mat.embasp.base.Output;
+import it.unical.mat.embasp.languages.IllegalAnnotationException;
+import it.unical.mat.embasp.languages.ObjectNotValidException;
 import it.unical.mat.embasp.languages.asp.ASPInputProgram;
+import it.unical.mat.embasp.languages.asp.ASPMapper;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import it.unical.mat.embasp.languages.asp.AnswerSets;
 import it.unical.mat.embasp.platforms.desktop.DesktopHandler;
@@ -15,54 +18,64 @@ import org.unical.server.ResponseSolver;
 import org.unical.server.model.*;
 import org.unical.server.solvers.tommardo.facts.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
-@Component("niqqas")
+@Component("thommardo")
 public class Solver extends ResponseSolver {
 
-    private Handler handler;
-
-    private SolutionFact oldSol;
-    private SolutionFact newSol;
+    public Solver(){
+        super();
+    }
 
     @Override
-    public String solve(Input input) throws Exception {
-        DesktopService service = new DLV2DesktopService ("lib/dlv2.exe");
+    public String solve(Input input) {
+        try{
+            //1. class registration
+            registerClasses();
 
-        handler = new DesktopHandler(service);
+            //2. fixed program (facts)
+            addFacts(input);
 
-        OptionDescriptor option = new OptionDescriptor("--no-facts");
-        handler.addOption(option);
+            //3. variable program (strat)
+            InputProgram strat = new ASPInputProgram();
+            strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
+            handler.addProgram(strat);
 
-        //fixed program (facts)
-        addFacts(input);
+            /*if we want more implementations:*/
+            //strat.clearAll(); //and add other strategies!
 
-        //variable program (strat)
-        InputProgram strat = new ASPInputProgram();
-        strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
-        handler.addProgram(strat);
+            //4. generate answer set (just one since there is just a solution.)
+            AnswerSets answerSets = (AnswerSets) handler.startSync();
+            AnswerSet answerSet = answerSets.getAnswersets().getFirst();
 
-        //here I generate the output!
-        Output output = handler.startSync();
-
-        /*if we want more implementations:*/
-        //strat.clearAll(); //and add other strategies!
-
-        AnswerSets answerSets = (AnswerSets) output;
-
-        //get optimal answer sets
-        for(AnswerSet a : answerSets.getOptimalAnswerSets()){
-            for(Object atom: a.getAtoms()){
+            for(Object atom: answerSet.getAtoms()){
                 if(! (atom instanceof SolutionFact))
                     continue;
 
-                if(newSol != null)
-                    oldSol = newSol;
-                newSol = (SolutionFact) atom;
+                System.out.println("eccolo!");
+                SolutionFact sol = (SolutionFact) atom;
+
+                //return computeAction(sol, input.getShips().get(input.getShips().);
             }
+
+            //5.given the solution, return the correct string.
+        }catch(Exception e){
+            e.printStackTrace();
         }
-        return computeAction();
+        return "";
+    }
+
+    public void registerClasses() throws ObjectNotValidException, IllegalAnnotationException {
+        ASPMapper instance = ASPMapper.getInstance();
+
+        instance.registerClass(BarrelFact.class);
+        instance.registerClass(BombFact.class);
+        instance.registerClass(EnemyFact.class);
+        instance.registerClass(PlayerFact.class);
+        instance.registerClass(SolutionFact.class);
     }
 
     private void addFacts(Input input) throws Exception {
@@ -87,16 +100,7 @@ public class Solver extends ResponseSolver {
         handler.addProgram(factsProgram);
     }
 
-    private String computeAction(){
-        if(oldSol == null)
-            return "MOVE " + newSol.getX() + " " + newSol.getY() + " " + newSol.getSpeed();
-
-        if(oldSol.getX() != newSol.getX() || oldSol.getY() != newSol.getY())
-            return "MOVE " + newSol.getX() + " " + newSol.getY() + " " + newSol.getSpeed();
-
-        if(oldSol.getSpeed() != newSol.getSpeed())
-            return "SLOWER";
-
-        return "WAIT";
+    private String computeAction(SolutionFact newSol, Ship oldSol){
+        return "MOVE " + newSol.getX() + " " + newSol.getY() + " " + newSol.getSpeed();
     }
 }
