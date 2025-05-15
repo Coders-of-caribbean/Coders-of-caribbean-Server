@@ -1,6 +1,10 @@
 package org.unical.server;
 
 import it.unical.mat.embasp.base.Handler;
+import it.unical.mat.embasp.base.InputProgram;
+import it.unical.mat.embasp.languages.asp.ASPMapper;
+import it.unical.mat.embasp.languages.asp.AnswerSet;
+import it.unical.mat.embasp.languages.asp.AnswerSets;
 import it.unical.mat.embasp.platforms.desktop.DesktopHandler;
 import it.unical.mat.embasp.specializations.dlv2.desktop.DLV2DesktopService;
 import lombok.Getter;
@@ -8,6 +12,16 @@ import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
+import org.unical.server.predicates.Player;
+import org.unical.server.predicates.actions.Action;
+import org.unical.server.predicates.actions.Move;
+import org.unical.server.predicates.objects.Bomb;
+import org.unical.server.predicates.objects.Rum;
+
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /*
 **** SOSTITUITA ALL'INTERFACCIA SOLVABLE ****
@@ -40,10 +54,102 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     protected String beanName;
 
+    private static final Class<?>[] classes = {Move.class, Bomb.class, Rum.class, Player.class};
+
+
+    static {
+        try {
+            for (Class<?> clazz : classes) {
+                ASPMapper.getInstance().registerClass(clazz);
+            }
+            Logger.getAnonymousLogger().warning("Registered classes");
+        } catch (Exception e) {
+            throw new RuntimeException("Problems registering classes", e);
+        }
+    }
+
     public AbstractSolver() {
         String binary = getBinary();
         handler = new DesktopHandler(new DLV2DesktopService("lib/" + binary));
     }
+
+    /**
+     * Trova i predicati azione e ne restituisce uno solo.
+     * Sfrutta il fatto che le azioni implementano un'interfaccia comune che impone
+     * la definizione di {@link Object#toString()}.
+     *
+     * Nota: già a priori non dovrebbero esserci più azioni. (asp-enforced)
+     *
+     * @param answerSet
+     * @return la stringa che rappresenta il comando.
+     */
+    protected String getAction(AnswerSet answerSet){
+        try {
+            String[] actions =  answerSet.getAtoms()
+                    .stream()
+                    .filter((predicate) -> predicate instanceof Action)
+                    .map(Object::toString)
+                    .toArray(String[]::new);
+
+            // assert actions.length == 1 : "Non dovrebbe esserci più di una azione :(";
+            return actions[0];
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * A volte potrebbe succedere che il programma decida di non usare weak constraint
+     * questa funzione serve per ottenere un {@link AnswerSet} ottimale se esiste, uno generico altrimenti.
+     *
+     * @return un {@link AnswerSet} ottimo se esiste, un generico altrimenti.
+     */
+    protected AnswerSet getAnswerSet() {
+        AnswerSets answerSets = (AnswerSets) handler.startSync();
+        try{
+            return answerSets.getOptimalAnswerSets().getFirst();
+        } catch (NoSuchElementException e){
+            return answerSets.getAnswersets().getFirst();
+        }
+    }
+
+    /**
+     * Questa funzione è un utility che serve per aggiungere ad un {@link InputProgram},
+     * i fatti che sono presenti in {@link PlayerData}.
+     *
+     * @param program Program to add the facts
+     * @param input PlayerData
+     * @return {@link InputProgram} passato come parametro, oppure {@code null} se l'operazione non va a buon fine.
+     */
+    protected InputProgram addFacts(InputProgram program, PlayerData input){
+        assert input != null;
+        assert program != null;
+
+        try {
+            Set<Object> rum = input.getBarrels()
+                    .stream()
+                    .map((Rum::new))
+                    .collect(Collectors.toSet());
+
+            Set<Object> players = input.getEnemies()
+                    .stream()
+                    .map((Player::new))
+                    .collect(Collectors.toSet());
+
+            Set<Object> bombs = input.getMines()
+                    .stream()
+                    .map((Bomb::new))
+                    .collect(Collectors.toSet());
+
+            program.addObjectsInput(bombs);
+            program.addObjectsInput(players);
+            program.addObjectsInput(rum);
+            return program;
+        }catch (Exception e){
+            return null;
+        }
+    }
+
     private String getBinary(){
         String system = System.getProperty("os.name");
         if(system.startsWith("Windows")) return "dlv2.exe";

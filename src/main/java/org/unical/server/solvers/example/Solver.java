@@ -9,7 +9,7 @@ import org.unical.server.model.PlayerData;
 @Component("terracina panca piana 5*30")
 public class Solver extends AbstractSolver {
     @Override
-    public String solve(PlayerData data) {
+    public String solve(PlayerData input) {
         return "Ninja Fuduli";
     }
 }
