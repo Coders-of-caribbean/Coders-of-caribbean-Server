@@ -33,7 +33,7 @@ public class Player {
     @Param(5)
     private int direction;
 
-    public Player(PlayerShip ship) {
+    public Player(Ship ship) {
         this.x = ship.x;
         this.y = ship.y;
         this.health = ship.getRum();
