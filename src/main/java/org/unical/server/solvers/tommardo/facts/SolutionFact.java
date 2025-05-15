@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Id("move")
+@Id("sol")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,7 +15,6 @@ public class SolutionFact {
     int x;
     @Param(1)
     int y;
-
-    @Param(3)
+    @Param(2)
     int speed;
 }
