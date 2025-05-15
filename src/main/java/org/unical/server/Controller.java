@@ -46,14 +46,11 @@ public class Controller {
         return cmd;
     }
 
-    @PostMapping(path="/random/command/multiple", consumes = "application/json")
-    public ResponseEntity<List<Command>> randomCommandMultiple(@RequestBody(required = false) Map<String, Object> requestData) {
+    @PostMapping(path="/random/command/multiple", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<Map<String, Command>> randomCommandMultiple(@RequestBody(required = false) Map<String, Object> requestData) {
         // Stampa il JSON ricevuto per debug
         if (requestData != null) {
             System.out.println("Received JSON data: " + requestData);
-
-            // Puoi accedere ai campi specifici del JSON qui
-            // Esempio: if (requestData.containsKey("someField")) { ... }
         }
 
         List<Command> commands = new ArrayList<>();
@@ -64,6 +61,12 @@ public class Controller {
         commands.get(1).generateRandomCommand();
         commands.get(2).generateRandomCommand();
 
-        return ResponseEntity.ok(commands);
+        // Creazione della mappa con la struttura richiesta
+        Map<String, Command> response = new LinkedHashMap<>(); // LinkedHashMap mantiene l'ordine di inserimento
+        response.put("thommardo", commands.get(0));
+        response.put("sahur", commands.get(1));
+        response.put("aspiranti", commands.get(2));
+
+        return ResponseEntity.ok(response);
     }
 }
