@@ -6,5 +6,6 @@ import java.awt.*;
 
 //EXTENSIBLE!
 @Data
-public class Bomb extends Point {
+public class Mine extends Point {
+    private int damage;
 }
