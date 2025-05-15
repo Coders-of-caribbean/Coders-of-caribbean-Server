@@ -38,7 +38,7 @@ import org.unical.server.model.Input;
 public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     @Getter
-    private String beanName;
+    protected String beanName;
 
     public AbstractSolver() {
         String binary = getBinary();
