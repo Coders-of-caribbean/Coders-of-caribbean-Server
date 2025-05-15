@@ -2,6 +2,7 @@ package org.unical.server;
 
 import it.unical.mat.embasp.base.Handler;
 import it.unical.mat.embasp.base.InputProgram;
+import it.unical.mat.embasp.languages.asp.ASPMapper;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import it.unical.mat.embasp.languages.asp.AnswerSets;
 import it.unical.mat.embasp.platforms.desktop.DesktopHandler;
@@ -13,11 +14,13 @@ import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
 import org.unical.server.predicates.Player;
 import org.unical.server.predicates.actions.Action;
+import org.unical.server.predicates.actions.Move;
 import org.unical.server.predicates.objects.Bomb;
 import org.unical.server.predicates.objects.Rum;
 
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /*
@@ -51,6 +54,20 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     @Getter
     private String beanName;
+
+    private static final Class<?>[] classes = {Move.class, Bomb.class, Rum.class, Player.class};
+
+
+    static {
+        try {
+            for (Class<?> clazz : classes) {
+                ASPMapper.getInstance().registerClass(clazz);
+            }
+            Logger.getAnonymousLogger().warning("Registered classes");
+        } catch (Exception e) {
+            throw new RuntimeException("Problems registering classes", e);
+        }
+    }
 
     public AbstractSolver() {
         String binary = getBinary();
