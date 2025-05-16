@@ -8,8 +8,8 @@ import java.util.List;
 @Getter
 @Setter
 public class PlayerData {
-    PlayerShip info;
+    PlayerShip playerInfo;
     private List<Barrel> barrels;
     private List<Mine> mines;
-    private List<EnemyShip> enemies;
+    private List<EnemyShip> enemiesInfo;
 }
