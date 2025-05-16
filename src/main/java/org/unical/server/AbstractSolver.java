@@ -16,7 +16,7 @@ import org.unical.server.predicates.PlayerFact;
 import org.unical.server.predicates.actions.Action;
 import org.unical.server.predicates.actions.Move;
 import org.unical.server.predicates.objects.MineFact;
-import org.unical.server.predicates.objects.RumFact;
+import org.unical.server.predicates.objects.BarrelFact;
 
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -54,7 +54,7 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     protected String beanName;
 
-    private static final Class<?>[] classes = {Move.class, MineFact.class, RumFact.class, PlayerFact.class};
+    private static final Class<?>[] classes = {Move.class, MineFact.class, BarrelFact.class, PlayerFact.class};
 
 
     static {
@@ -128,7 +128,7 @@ public abstract class AbstractSolver implements BeanNameAware {
         try {
             Set<Object> rum = input.getBarrels()
                     .stream()
-                    .map((RumFact::new))
+                    .map((BarrelFact::new))
                     .collect(Collectors.toSet());
 
             Set<Object> enemies = input.getEnemies()
