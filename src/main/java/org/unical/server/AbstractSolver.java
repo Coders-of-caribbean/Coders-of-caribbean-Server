@@ -10,14 +10,13 @@ import it.unical.mat.embasp.specializations.dlv2.desktop.DLV2DesktopService;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
-import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
-import org.unical.server.predicates.Enemy;
-import org.unical.server.predicates.Player;
+import org.unical.server.predicates.EnemyFact;
+import org.unical.server.predicates.PlayerFact;
 import org.unical.server.predicates.actions.Action;
 import org.unical.server.predicates.actions.Move;
-import org.unical.server.predicates.objects.Bomb;
-import org.unical.server.predicates.objects.Rum;
+import org.unical.server.predicates.objects.MineFact;
+import org.unical.server.predicates.objects.RumFact;
 
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -55,7 +54,7 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     protected String beanName;
 
-    private static final Class<?>[] classes = {Move.class, Bomb.class, Rum.class, Player.class};
+    private static final Class<?>[] classes = {Move.class, MineFact.class, RumFact.class, PlayerFact.class};
 
 
     static {
@@ -129,25 +128,25 @@ public abstract class AbstractSolver implements BeanNameAware {
         try {
             Set<Object> rum = input.getBarrels()
                     .stream()
-                    .map((Rum::new))
+                    .map((RumFact::new))
                     .collect(Collectors.toSet());
 
             Set<Object> enemies = input.getEnemies()
                     .stream()
-                    .map((Enemy::new))
+                    .map((EnemyFact::new))
                     .collect(Collectors.toSet());
 
             Set<Object> bombs = input.getMines()
                     .stream()
-                    .map((Bomb::new))
+                    .map((MineFact::new))
                     .collect(Collectors.toSet());
 
-            Player player = new Player(input.getInfo());
+            PlayerFact playerFact = new PlayerFact(input.getInfo());
 
             program.addObjectsInput(bombs);
             program.addObjectsInput(enemies);
             program.addObjectsInput(rum);
-            program.addObjectInput(player);
+            program.addObjectInput(playerFact);
             return program;
         }catch (Exception e){
             return null;

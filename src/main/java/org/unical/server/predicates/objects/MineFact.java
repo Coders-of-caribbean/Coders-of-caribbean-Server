@@ -2,25 +2,21 @@ package org.unical.server.predicates.objects;
 
 import it.unical.mat.embasp.languages.Id;
 import it.unical.mat.embasp.languages.Param;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.unical.server.model.Mine;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Id("bomb")
-public class Bomb {
+@Id("mine")
+public class MineFact {
     @Param(0)
     private int x;
 
     @Param(1)
     private int y;
 
-    public Bomb(Mine mine){
+    public MineFact(Mine mine){
         this.x = mine.x;
         this.y = mine.y;
     }
