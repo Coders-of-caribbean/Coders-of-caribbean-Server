@@ -10,14 +10,16 @@ import org.unical.server.model.PlayerData;
 @Component("aspiranti")
 public class Solver extends AbstractSolver {
 
-
     @Override
     public String solve(PlayerData input) {
         InputProgram inputProgram = new ASPInputProgram();
 
         try {
             handler.removeAll();
-            inputProgram.addProgram("move(1).");
+            //inputProgram.addProgram("move(1).");
+
+            inputProgram.addFilesPath("src/main/java/org/unical/server/solvers/aspiranti/program/program");
+
             handler.addProgram(inputProgram);
             addFacts(inputProgram, input);
 
