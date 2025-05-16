@@ -9,7 +9,7 @@ import org.unical.server.model.Barrel;
 @NoArgsConstructor
 @AllArgsConstructor
 @Id("rum")
-public class RumFact {
+public class BarrelFact {
     @Param(0)
     private int x;
 
@@ -19,7 +19,7 @@ public class RumFact {
     @Param(2)
     private int quantity;
 
-    public RumFact(Barrel barrel) {
+    public BarrelFact(Barrel barrel) {
         this.x = barrel.x;
         this.y = barrel.y;
         this.quantity = barrel.getRum();
