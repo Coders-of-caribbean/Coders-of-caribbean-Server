@@ -131,7 +131,7 @@ public abstract class AbstractSolver implements BeanNameAware {
                     .map((BarrelFact::new))
                     .collect(Collectors.toSet());
 
-            Set<Object> enemies = input.getEnemies()
+            Set<Object> enemies = input.getEnemiesInfo()
                     .stream()
                     .map((EnemyFact::new))
                     .collect(Collectors.toSet());
@@ -141,7 +141,7 @@ public abstract class AbstractSolver implements BeanNameAware {
                     .map((MineFact::new))
                     .collect(Collectors.toSet());
 
-            PlayerFact playerFact = new PlayerFact(input.getInfo());
+            PlayerFact playerFact = new PlayerFact(input.getPlayerInfo());
 
             program.addObjectsInput(bombs);
             program.addObjectsInput(enemies);

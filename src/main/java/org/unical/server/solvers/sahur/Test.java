@@ -34,8 +34,8 @@ public class Test {
 
         playerData.setBarrels(List.of(barrel));
         playerData.setMines(List.of(mine));
-        playerData.setEnemies(List.of(enemy));
-        playerData.setInfo(ship);
+        playerData.setEnemiesInfo(List.of(enemy));
+        playerData.setPlayerInfo(ship);
         System.out.println(solver.solve(playerData));
     }
 }
