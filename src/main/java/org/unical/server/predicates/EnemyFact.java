@@ -2,18 +2,14 @@ package org.unical.server.predicates;
 
 import it.unical.mat.embasp.languages.Id;
 import it.unical.mat.embasp.languages.Param;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.unical.server.model.Ship;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Id("enemy")
-public class Enemy {
+public class EnemyFact {
     @Param(0)
     private int x;
 
@@ -29,7 +25,7 @@ public class Enemy {
     @Param(4)
     private int direction;
 
-    public Enemy(Ship ship) {
+    public EnemyFact(Ship ship) {
         this.x = ship.x;
         this.y = ship.y;
         this.health = ship.getRum();
