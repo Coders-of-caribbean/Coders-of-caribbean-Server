@@ -5,6 +5,6 @@ cols(1..21).
 speed(0..2).
 cell(X,Y) :- rows(X), cols(Y).
 
-{sol(X,Y,Speed) : cell(X,Y), speed(Speed)} = 1.
+{move(Speed,X,Y) : cell(X,Y), speed(Speed)} = 1.
 
 %constraints...

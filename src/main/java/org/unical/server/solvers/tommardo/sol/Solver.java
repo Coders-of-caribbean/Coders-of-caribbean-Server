@@ -36,23 +36,14 @@ public class Solver extends AbstractSolver {
             strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
             handler.addProgram(strat);
 
-            /*if we want more implementations:*/
+            /*NOTE: if we want more implementations:*/
             //strat.clearAll(); //and add other strategies!
 
-            //4. generate answer set (just one since there is just a solution.)
+            //3. generate answer set (just one since there is just a solution.)
             AnswerSet result = getAnswerSet();
 
-            for(Object atom: result.getAtoms()){
-                if(! (atom instanceof SolutionFact))
-                    continue;
-
-                System.out.println("eccolo!");
-                SolutionFact sol = (SolutionFact) atom;
-
-                //given the solution, return the current string.
-                System.out.println(beanName + " " + sol.getX() + " "+ sol.getY()+" "+sol.getSpeed());
-                return sol.getX() + " "+ sol.getY()+" "+sol.getSpeed();
-            }
+            //4. get the consequent action
+            return getAction(result);
 
         }catch(Exception e){
             e.printStackTrace();
