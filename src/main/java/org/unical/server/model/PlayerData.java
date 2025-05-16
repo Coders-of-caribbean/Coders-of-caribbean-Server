@@ -1,10 +1,8 @@
 package org.unical.server.model;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor

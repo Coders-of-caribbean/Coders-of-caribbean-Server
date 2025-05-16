@@ -15,13 +15,13 @@ import lombok.Setter;
 @Id("move")
 public class Move implements Action {
     @Param(0)
-    private int x;
+    private int speed;
 
     @Param(1)
-    private int y;
+    private int x;
 
     @Param(2)
-    private int speed;
+    private int y;
 
     @Override
     public String toString() {

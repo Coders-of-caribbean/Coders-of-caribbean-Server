@@ -24,14 +24,14 @@ public class Solver extends AbstractSolver {
         InputProgram inputProgram = new ASPInputProgram();
         try {
             handler.removeAll();
-            inputProgram.addProgram("move(1..5,1..5,1).");
+            inputProgram.addProgram("test(1).");
             handler.addProgram(inputProgram);
             addFacts(inputProgram, input);
 
             AnswerSet result = getAnswerSet();
             assert result != null;
 
-            return getAction(result);
+            return result.toString();
         } catch (Exception e) {
             Logger.getAnonymousLogger().warning(e.getMessage());
             return "move(1,1)";

@@ -12,6 +12,7 @@ import lombok.Setter;
 import org.springframework.beans.factory.BeanNameAware;
 import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
+import org.unical.server.predicates.Enemy;
 import org.unical.server.predicates.Player;
 import org.unical.server.predicates.actions.Action;
 import org.unical.server.predicates.actions.Move;
@@ -131,9 +132,9 @@ public abstract class AbstractSolver implements BeanNameAware {
                     .map((Rum::new))
                     .collect(Collectors.toSet());
 
-            Set<Object> players = input.getEnemies()
+            Set<Object> enemies = input.getEnemies()
                     .stream()
-                    .map((Player::new))
+                    .map((Enemy::new))
                     .collect(Collectors.toSet());
 
             Set<Object> bombs = input.getMines()
@@ -141,9 +142,12 @@ public abstract class AbstractSolver implements BeanNameAware {
                     .map((Bomb::new))
                     .collect(Collectors.toSet());
 
+            Player player = new Player(input.getInfo());
+
             program.addObjectsInput(bombs);
-            program.addObjectsInput(players);
+            program.addObjectsInput(enemies);
             program.addObjectsInput(rum);
+            program.addObjectInput(player);
             return program;
         }catch (Exception e){
             return null;
