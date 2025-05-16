@@ -9,6 +9,7 @@ import it.unical.mat.embasp.languages.asp.AnswerSets;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
+import org.unical.server.command.Command;
 import org.unical.server.model.PlayerData;
 import java.util.logging.Logger;
 
@@ -31,10 +32,13 @@ public class Solver extends AbstractSolver {
             AnswerSet result = getAnswerSet();
             assert result != null;
 
-            return result.toString();
+            //return result.toString();
+            return getAction(result);
         } catch (Exception e) {
             Logger.getAnonymousLogger().warning(e.getMessage());
-            return "move(1,1)";
+            Command c = new Command();
+            c.generateRandomCommand();
+            return c.getCommand();
         }
     }
 }

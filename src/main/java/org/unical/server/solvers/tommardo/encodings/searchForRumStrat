@@ -1,7 +1,7 @@
 %a simple example.
 
-rows(1..23).
-cols(1..21).
+rows(0..22).
+cols(0..20).
 speed(0..2).
 cell(X,Y) :- rows(X), cols(Y).
 

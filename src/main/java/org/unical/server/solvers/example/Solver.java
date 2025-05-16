@@ -6,10 +6,10 @@ import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
 
 
-@Component("terracina panca piana 5*30")
+@Component("aspiranti")
 public class Solver extends AbstractSolver {
     @Override
     public String solve(PlayerData input) {
-        return "Ninja Fuduli";
+        return "!!! NO GAME INFO !!!";
     }
 }
