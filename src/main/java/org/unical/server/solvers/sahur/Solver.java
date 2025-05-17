@@ -33,7 +33,12 @@ public class Solver extends AbstractSolver {
             assert result != null;
 
             //return result.toString();
-            return getAction(result);
+            //return getAction(result);
+
+            Command c = new Command();
+            c.generateRandomCommand();
+            return c.getCommand();
+
         } catch (Exception e) {
             Logger.getAnonymousLogger().warning(e.getMessage());
             Command c = new Command();

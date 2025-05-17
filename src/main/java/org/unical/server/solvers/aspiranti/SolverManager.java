@@ -7,7 +7,7 @@ import java.util.List;
 
 public class SolverManager {
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         Solver solver = new Solver();
         PlayerData playerData = new PlayerData();
 
@@ -39,6 +39,6 @@ public class SolverManager {
         playerData.setEnemiesInfo(List.of(enemy));
         playerData.setPlayerInfo(ship);
         System.out.println(solver.solve(playerData));
-    }
+    }*/
 
 }

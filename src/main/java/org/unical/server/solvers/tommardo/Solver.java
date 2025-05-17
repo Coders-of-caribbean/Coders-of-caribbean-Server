@@ -5,6 +5,7 @@ import it.unical.mat.embasp.languages.asp.ASPInputProgram;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
+import org.unical.server.command.Command;
 import org.unical.server.model.*;
 
 @Component("thommardo")
@@ -34,7 +35,11 @@ public class Solver extends AbstractSolver {
             AnswerSet result = getAnswerSet();
 
             //4. get the consequent action
-            return getAction(result);
+            //return getAction(result);
+
+            Command c = new Command();
+            c.generateRandomCommand();
+            return c.getCommand();
 
         }catch(Exception e){
             e.printStackTrace();
