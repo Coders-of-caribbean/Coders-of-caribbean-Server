@@ -25,7 +25,7 @@ public class Move implements Action {
 
     @Override
     public String toString() {
-        return String.format("MOVE %d %d %d", speed, x, y);
+        return String.format("%d %d %d", speed, x, y);
     }
 }
 
