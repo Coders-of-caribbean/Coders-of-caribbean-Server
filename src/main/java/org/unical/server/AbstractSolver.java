@@ -52,8 +52,7 @@ import java.util.stream.Collectors;
 @Setter
 public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
-    @Getter
-    private String beanName;
+    protected String beanName;
 
     private static final Class<?>[] classes = {Move.class, MineFact.class, BarrelFact.class, PlayerFact.class};
 

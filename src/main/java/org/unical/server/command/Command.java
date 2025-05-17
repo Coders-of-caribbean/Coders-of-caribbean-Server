@@ -14,11 +14,14 @@ public class Command {
         String wait = "WAIT";
         Random random = new Random();
         int dir = random.nextInt(6) + 1;
-        int speed = random.nextInt(3);
-        int choice = random.nextInt(2);
+        int speed = random.nextInt(1, 3);
+        int choice = random.nextInt(1, 3);
 
-        if(choice % 2 == 0) {
-            command = move +  " " + dir + " " + speed;
+        int x = random.nextInt(10);
+        int y = random.nextInt(10);
+
+        if(true) {
+            command = speed + " " + x + " " + y;
         } else {
             command = wait;
         }
