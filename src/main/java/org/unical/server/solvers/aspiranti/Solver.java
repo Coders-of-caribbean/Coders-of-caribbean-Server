@@ -28,14 +28,16 @@ public class Solver extends AbstractSolver {
             addFacts(inputProgram, input);
 
             AnswerSet result = getAnswerSet();
-            assert result != null;
+            //assert result != null;
 
-            //return getAction(result);
+            System.out.println(getAction(result));
+            return getAction(result);
 
-            Command c = new Command();
+            /*Command c = new Command();
             c.generateRandomCommand();
-            return c.getCommand();
+            return c.getCommand();*/
         }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
             return "0 0 0";
         }
     }

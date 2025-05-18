@@ -16,34 +16,30 @@ public class Solver extends AbstractSolver {
     }
 
     @Override
-    public String solve(PlayerData data) {
-        try{
-            //1. fixed problem (facts)
-            InputProgram program = new ASPInputProgram();
-            handler.addProgram(program);
-            addFacts(program, data);
+    public String solve(PlayerData input) {
+        InputProgram inputProgram = new ASPInputProgram();
 
-            //2. variable program (strategy)
-            InputProgram strat = new ASPInputProgram();
-            strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
-            handler.addProgram(strat);
+        try {
+            handler.removeAll();
+            //inputProgram.addProgram("move(1).");
 
-            /*NOTE if we want more implementations:*/
-            //strat.clearAll(); //and add other strategies into the handler!
+            inputProgram.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
+            handler.addProgram(inputProgram);
+            addFacts(inputProgram, input);
 
-            //3. generate answer set (just one since there is just a solution.)
             AnswerSet result = getAnswerSet();
+            assert result != null;
 
-            //4. get the consequent action
+            //System.out.println(getAction(result));
+
             //return getAction(result);
 
             Command c = new Command();
             c.generateRandomCommand();
             return c.getCommand();
-
-        }catch(Exception e){
-            e.printStackTrace();
+        }catch (Exception e) {
+            return "0 0 0";
         }
-        return "";
+
     }
 }

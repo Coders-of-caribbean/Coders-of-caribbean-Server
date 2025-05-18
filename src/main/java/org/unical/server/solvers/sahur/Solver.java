@@ -16,34 +16,35 @@ import java.util.logging.Logger;
 @Component("sahur")
 public class Solver extends AbstractSolver {
 
-    public Solver() {
+    public Solver(){
         super();
     }
 
     @Override
     public String solve(PlayerData input) {
         InputProgram inputProgram = new ASPInputProgram();
+
         try {
             handler.removeAll();
-            inputProgram.addProgram("test(1).");
+            //inputProgram.addProgram("move(1).");
+
+            inputProgram.addFilesPath("src/main/java/org/unical/server/solvers/sahur/program/program");
             handler.addProgram(inputProgram);
             addFacts(inputProgram, input);
 
             AnswerSet result = getAnswerSet();
             assert result != null;
 
-            //return result.toString();
+            //System.out.println(getAction(result));
+
             //return getAction(result);
 
             Command c = new Command();
             c.generateRandomCommand();
             return c.getCommand();
 
-        } catch (Exception e) {
-            Logger.getAnonymousLogger().warning(e.getMessage());
-            Command c = new Command();
-            c.generateRandomCommand();
-            return c.getCommand();
+        }catch (Exception e) {
+            return "0 0 0";
         }
     }
 }
