@@ -10,32 +10,12 @@ import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
 import org.unical.server.model.PlayerData;
+
+import java.util.Random;
 import java.util.logging.Logger;
 
 @Component("sahur")
 public class Solver extends AbstractSolver {
 
-    public Solver() {
-        super();
-    }
-
-    @Override
-    public String solve(PlayerData input) {
-        InputProgram inputProgram = new ASPInputProgram();
-        try {
-            handler.removeAll();
-            inputProgram.addProgram("test(1).");
-            handler.addProgram(inputProgram);
-            addFacts(inputProgram, input);
-
-            AnswerSet result = getAnswerSet();
-            assert result != null;
-
-            return result.toString();
-        } catch (Exception e) {
-            Logger.getAnonymousLogger().warning(e.getMessage());
-            return "move(1,1)";
-        }
-    }
 }
 
