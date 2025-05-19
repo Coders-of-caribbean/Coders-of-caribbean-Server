@@ -8,6 +8,9 @@ import org.unical.server.model.Input;
 import org.unical.server.model.Output;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 //TODO realize an ExceptionHandler class
 
@@ -20,16 +23,40 @@ public class Controller {
     // grazie a @ComponentScan e a @Component, Spring individuerà tutti i bean e li popolerà nella lista.
     //ovviamente, viene definita nel costruttore!
     private List<AbstractSolver> solvers;
+    private ExecutorService executor;
 
     @PostMapping(path="/solve", produces = "application/json")
     public ResponseEntity<Output> solve(@RequestBody Input input) {
         Output output = new Output();
 
+        List<CompletableFuture<Void>> futures = solvers.stream()
+                .filter(s -> input.getInput().containsKey(s.getBeanName()))
+                .map(s -> CompletableFuture.runAsync(()->{
+                    try{
+                        String result = s.solve(input.getInput().get(s.getBeanName()));
+                        System.out.println("done");
+                        //sezione critica: inserisco il risultato in maniera safe
+                        synchronized (output) {
+                            output.insert(s.getBeanName(), result);
+                        }
+                    }catch(Exception ex){
+                        synchronized (output) {
+                            //output.insert(s.getBeanName(), "!!! NO GAME INFO !!!");
+                            ex.printStackTrace();
+                        }
+                    }
+                    },executor))
+                .toList();
+        /*
         solvers.forEach(s -> {
             String result;
             try {
                 //assign just his player data (if present!)
-                if(input.getInput().containsKey(s.getBeanName()))
+                if(input.getInput().containsKey(s.getBeanName())){
+                    executor.submit(() -> {
+                        s.solve(input.getInput().get(s.getBeanName()));
+                    });
+                }
                     result = s.solve(input.getInput().get(s.getBeanName()));
                 else
                     //FIXME should launch an exception
@@ -40,7 +67,10 @@ public class Controller {
             String solverName = s.getBeanName();
             output.insert(solverName, result);
         });
+        */
 
+        //Join
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         return ResponseEntity.ok(output);
     }
 

@@ -1,15 +1,18 @@
 package org.unical.server.solvers.example;
 
+import it.unical.mat.embasp.base.InputProgram;
+import it.unical.mat.embasp.languages.asp.ASPInputProgram;
+import it.unical.mat.embasp.languages.asp.AnswerSet;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 import org.unical.server.model.Input;
 import org.unical.server.model.PlayerData;
 
+import java.util.Random;
+import java.util.logging.Logger;
+
 
 @Component("aspiranti")
 public class Solver extends AbstractSolver {
-    @Override
-    public String solve(PlayerData input) {
-        return "2 12 1";
-    }
+
 }

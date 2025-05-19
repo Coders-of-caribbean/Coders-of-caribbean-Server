@@ -2,6 +2,7 @@ package org.unical.server;
 
 import it.unical.mat.embasp.base.Handler;
 import it.unical.mat.embasp.base.InputProgram;
+import it.unical.mat.embasp.languages.asp.ASPInputProgram;
 import it.unical.mat.embasp.languages.asp.ASPMapper;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import it.unical.mat.embasp.languages.asp.AnswerSets;
@@ -19,6 +20,7 @@ import org.unical.server.predicates.objects.MineFact;
 import org.unical.server.predicates.objects.BarrelFact;
 
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -167,5 +169,23 @@ public abstract class AbstractSolver implements BeanNameAware {
         throw new RuntimeException("Unsupported system: " + system);
     }
 
-    public abstract String solve(PlayerData playerData);
+    public String solve(PlayerData playerData){
+        InputProgram inputProgram = new ASPInputProgram();
+        Random rand = new Random();
+        try {
+            handler.removeAll();
+            String randomCommand = String.format("move(%d,%d,%d)", rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21) );
+            inputProgram.addProgram(randomCommand);
+            handler.addProgram(inputProgram);
+            addFacts(inputProgram, playerData);
+
+            AnswerSet result = getAnswerSet();
+            assert result != null;
+
+            return getAction(result);
+        } catch (Exception e) {
+            Logger.getAnonymousLogger().warning(e.getMessage());
+            return String.format("%d %d %d",rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21)  );
+        }
+    }
 }
