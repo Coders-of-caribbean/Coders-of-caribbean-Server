@@ -10,6 +10,8 @@ import org.unical.server.model.*;
 @Component("thommardo")
 public class Solver extends AbstractSolver {
 
+    private final String encodingsPath = "src/main/java/org/unical/server/solvers/tommardo/encodings/";
+
     public Solver(){
         super();
     }
@@ -17,15 +19,14 @@ public class Solver extends AbstractSolver {
     @Override
     public String solve(PlayerData data) {
         try{
+            handler.removeAll();
             //1. fixed problem (facts)
             InputProgram program = new ASPInputProgram();
             handler.addProgram(program);
             addFacts(program, data);
 
             //2. variable program (strategy)
-            InputProgram strat = new ASPInputProgram();
-            strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
-            handler.addProgram(strat);
+            addStrategy(data);
 
             /*NOTE if we want more implementations:*/
             //strat.clearAll(); //and add other strategies into the handler!
@@ -33,6 +34,7 @@ public class Solver extends AbstractSolver {
             //3. generate answer set (just one since there is just a solution.)
             AnswerSet result = getAnswerSet();
 
+            System.out.println(result.toString());
             //4. get the consequent action
             return getAction(result);
 
@@ -40,5 +42,11 @@ public class Solver extends AbstractSolver {
             e.printStackTrace();
         }
         return "";
+    }
+
+    private void addStrategy(PlayerData data){
+        InputProgram strat = new ASPInputProgram();
+        strat.addFilesPath(encodingsPath + "survive");
+        handler.addProgram(strat);
     }
 }
