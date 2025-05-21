@@ -1,0 +1,127 @@
+% di quanto devo variare le coordinate in base alla direzione
+dx(0,1). dx(1,1). dx(2,0). dx(3,-1). dx(4,-1). dx(5,0).
+dy(0,0). dy(1,-1). dy(2,-1). dy(3,0). dy(4,1). dy(5,1).
+
+enemyBow(X1, Y1) :-
+    enemy(X, Y, _, _, Dir),
+    dx(Dir, OffX),
+    dy(Dir, OffY),
+    X1 = X + OffX,
+    Y1 = Y + OffY.
+
+% il calcolo della stern è uguale ma opposto a quello della bow
+enemyStern(X1, Y1) :-
+    enemy(X, Y, _, _, Dir),
+    dx(Dir, OffX),
+    dy(Dir, OffY),
+    X1 = X - OffX,
+    Y1 = Y - OffY.
+
+
+row(0..22).
+col(0..20).
+cell(X,Y) :- row(X), col(Y).
+
+pari(0).
+pari(X) :- dispari(Y), Y = X-1, X <= 22.
+dispari(X) :- pari(Y), Y = X-1, X <= 22.
+
+%proiezioni per safety
+barrelPos(X,Y) :- barrel(X,Y,_).
+playerPos(X,Y) :- player(X,Y,_,_,_).
+
+%percorso
+perc(X,Y) | notPerc(X,Y) :- cell(X,Y).
+
+%VICINATO**
+%vicinato in comune
+neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1+1.
+neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1-1.
+neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1+1.
+neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1-1.
+
+%riga pari
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1+1, pari(Y1).
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1-1,  pari(Y1).
+
+%riga dispari
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1-1, X1, dispari(Y1).
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1+1, dispari(Y1).
+
+%esattamente un istanza di barrelPos nel percorso
+:- #count{X,Y : perc(X,Y), barrelPos(X,Y)} != 1.
+
+%esattamente un vicinato dalla playerPos e dal barrelPos
+:- #count{X2,Y2 : perc(X1,Y1), playerPos(X1,Y1), neighbour(X1,Y1,X2,Y2)} != 1.
+:- #count{X1,Y1 : perc(X2,Y2), barrelPos(X2,Y2), neighbour(X1,Y1,X2,Y2)} != 1.
+
+%almeno due vicini da celle diverse da playerPos e barrelPos
+:- perc(X1,Y1), not playerPos(X1, Y1), not barrelPos(X1,Y1), #count{X2,Y2 : neighbour(X1,Y1,X2,Y2)} < 2.
+
+minaPresente(X,Y) :- perc(X,Y), mine(X,Y).
+:- perc(X,Y), barrelPos(X,Y), minaPresente.
+
+% minimizzo il numero di celle nel percorso -> trovo il percorso minimo verso il barile
+:~ perc(X,Y). [1@1, X,Y]
+
+% scrivere una regola che dica:
+%   - se c'è una mina metti in move una posizione a caso del tuo vicinato che non sia nel percorso
+% perchè?
+%   - considera questa situazione:
+%       - hai un barile B1 in una certa posizione
+%        - nel percorso più breve verso il barile c'è una mina M1
+%        - cambi barile B2 e ti sposti verso esso
+%        - spostandoti verso il nuovo barile non vedi più la mina M1 del turno precedente
+%        - vedi però un'altra mina M2 nel nuovo percorso
+%        - torni indietro verso B1 (M1 non è più visibile!)
+%        - avvicinandoti al barile di prima rivedi M1 e non vedi più M2
+%        - torni verso B2
+%        - loop!
+
+move(1,X,Y) :- perc(X,Y), barrelPos(X,Y), #count{X1,Y1 : minaPresente(X1,Y1)}=0.
+
+seenMine(X,Y) :- minaPresente, mine(X,Y), perc(X,Y).
+
+v(X1,Y,0) :- playerPos(X,Y), X1 = X + 2. % 0
+v(X1,Y1,1) :- playerPos(X,Y), X1 = X + 1, Y1 = Y - 2. % 1
+v(X1,Y1,2) :- playerPos(X,Y), X1 = X -1, Y1 = Y - 2. % 2
+v(X1,Y,3) :- playerPos(X,Y), X1 = X - 2. % 3
+v(X1,Y1,4) :- playerPos(X,Y), X1 = X - 1, Y1 = Y + 2. % 4
+v(X1,Y1,5) :- playerPos(X,Y), X1 = X + 1, Y1 = Y + 2. % 5
+
+% devo anche assicurarmi che la cella random in cui mi sposto non contenga alcuna mina!
+safeV(X,Y) :- v(X,Y,_), not mine(X,Y).
+
+% velocità 2 perchè c'è meno probabilità di rimanere bloccati tra due barili con mine
+move(2,X,Y) :- #count{X1,Y1 : minaPresente(X1,Y1)}!=0, safeV(X,Y), perc(X1,Y1), X!=X1, Y!=Y1.
+
+% per quanto riguarda i nemici, non è imperativo che non siano nel percorso come le mine, perchè potrebbero spostarsi nel tempo
+% devo quindi minimizzare il numero di celle di nemici presenti nel percorso.
+
+enemyCell(X,Y) :- enemy(X,Y,_,_,_), perc(X,Y).
+enemyCell(X,Y) :- enemyBow(X,Y), perc(X,Y).
+enemyCell(X,Y) :- enemyStern(X,Y), perc(X,Y).
+
+:~ enemyCell(X,Y). [1@1]
+
+% AGGIORNAMENTO 21 MAG
+
+% analogo calcolo per il player
+playerBow(X1, Y1) :-
+    player(X,Y,_,_,Dir),
+    dx(Dir, OffX),
+    dy(Dir, OffY),
+    X1 = X + OffX,
+    Y1 = Y + OffY.
+
+playerStern(X1, Y1) :-
+    player(X,Y,_,_,Dir),
+    dx(Dir, OffX),
+    dy(Dir, OffY),
+    X1 = X - OffX,
+    Y1 = Y - OffY.
+
+%#show v/2.
+%#show minaPresente/2.
+%#show seenMine/2.
+#show move/3.

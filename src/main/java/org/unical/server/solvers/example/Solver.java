@@ -14,5 +14,4 @@ import java.util.logging.Logger;
 
 @Component("aspiranti")
 public class Solver extends AbstractSolver {
-
 }
