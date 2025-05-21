@@ -1,0 +1,47 @@
+%FATTI**
+row(0..22).
+col(0..20).
+cell(X,Y) :- row(X), col(Y).
+
+pari(0).
+pari(X) :- dispari(Y), Y = X-1, X <= 22.
+dispari(X) :- pari(Y), Y = X-1, X <= 22.
+
+%proiezioni per safety
+barrelPos(X,Y) :- barrel(X,Y,_).
+playerPos(X,Y) :- player(X,Y,_,_,_).
+
+%percorso
+perc(X,Y) | notPerc(X,Y) :- cell(X,Y).
+
+%VICINATO**
+%vicinato in comune
+neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1+1.
+neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1-1.
+neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1+1.
+neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1-1.
+
+%riga pari
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1+1, pari(Y1).
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1-1,  pari(Y1).
+
+%riga dispari
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1-1, X1, dispari(Y1).
+neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1+1, dispari(Y1).
+
+%esattamente un istanza di barrelPos nel percorso
+:- #count{X,Y : perc(X,Y), barrelPos(X,Y)} != 1.
+%esattamente un vicinato dalla playerPos e dal barrelPos
+:- #count{X2,Y2 : perc(X1,Y1), playerPos(X1,Y1), neighbour(X1,Y1,X2,Y2)} != 1.
+:- #count{X1,Y1 : perc(X2,Y2), barrelPos(X2,Y2), neighbour(X1,Y1,X2,Y2)} != 1.
+%almeno due vicini da celle diverse da playerPos e barrelPos
+:- perc(X1,Y1), not playerPos(X1, Y1), not barrelPos(X1,Y1), #count{X2,Y2 : neighbour(X1,Y1,X2,Y2)} < 2.
+
+minaPresente :- perc(X,Y), mine(X,Y).
+:- perc(X,Y), barrelPos(X,Y), minaPresente.
+
+:~ perc(X,Y). [1@1, X,Y]
+
+move(1,X,Y) :- perc(X,Y), barrelPos(X,Y).
+
+#show move/3.
