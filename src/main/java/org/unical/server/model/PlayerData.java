@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Getter
 public class PlayerData {
     PlayerShip playerInfo;
     private List<Barrel> barrels;

@@ -19,6 +19,8 @@ public class Solver extends AbstractSolver {
     @Override
     public String solve(PlayerData data) {
         try{
+            System.out.println(data.getBarrels());
+            System.out.println(data.getMines());
             handler.removeAll();
             //1. fixed problem (facts)
             InputProgram program = new ASPInputProgram();
