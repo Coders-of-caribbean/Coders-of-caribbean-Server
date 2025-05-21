@@ -1,22 +1,18 @@
-package org.unical.server.solvers.sahur;
-
+package org.unical.server.solvers.tommardo;
 
 import it.unical.mat.embasp.base.InputProgram;
 import it.unical.mat.embasp.languages.asp.ASPInputProgram;
-import it.unical.mat.embasp.languages.asp.ASPMapper;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
-import it.unical.mat.embasp.languages.asp.AnswerSets;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
-
 import org.unical.server.model.PlayerData;
 
 import java.util.Random;
 import java.util.logging.Logger;
 
-@Component("sahur")
+@Component("thommardo")
 public class Solver extends AbstractSolver {
-    private final String encodingsPath = "src/main/java/org/unical/server/solvers/sahur/program/";
+    private final String encodingsPath = "src/main/java/org/unical/server/solvers/tommardo/program/";
 
     public Solver(){
         super();
@@ -52,7 +48,7 @@ public class Solver extends AbstractSolver {
 
     private void addStrategy(PlayerData data){
         InputProgram strat = new ASPInputProgram();
-        strat.addFilesPath(encodingsPath + "test.lp");
+        strat.addFilesPath(encodingsPath + "testThommardo.lp");
         handler.addProgram(strat);
     }
 }
