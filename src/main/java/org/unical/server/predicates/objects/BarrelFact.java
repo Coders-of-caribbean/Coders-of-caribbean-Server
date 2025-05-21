@@ -8,7 +8,7 @@ import org.unical.server.model.Barrel;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Id("rum")
+@Id("barrel")
 public class BarrelFact {
     @Param(0)
     private int x;

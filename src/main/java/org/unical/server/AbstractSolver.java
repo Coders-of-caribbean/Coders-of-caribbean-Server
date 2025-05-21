@@ -56,7 +56,7 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
     protected String beanName;
 
-    private static final Class<?>[] classes = {Move.class, MineFact.class, BarrelFact.class, PlayerFact.class};
+    private static final Class<?>[] classes = {Move.class, MineFact.class, BarrelFact.class, PlayerFact.class, EnemyFact.class};
 
 
     static {
