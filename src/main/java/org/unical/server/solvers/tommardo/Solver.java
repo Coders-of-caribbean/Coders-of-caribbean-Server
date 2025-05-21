@@ -5,6 +5,7 @@ import it.unical.mat.embasp.languages.asp.ASPInputProgram;
 import it.unical.mat.embasp.languages.asp.AnswerSet;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
+import org.unical.server.command.Command;
 import org.unical.server.model.*;
 
 @Component("thommardo")
@@ -17,6 +18,12 @@ public class Solver extends AbstractSolver {
     @Override
     public String solve(PlayerData data) {
         try{
+
+            System.out.println(data.getBarrels());
+            System.out.println(data.getMines());
+            System.out.println(data.getEnemiesInfo());
+
+            handler.removeAll();
             //1. fixed problem (facts)
             InputProgram program = new ASPInputProgram();
             handler.addProgram(program);
@@ -27,14 +34,19 @@ public class Solver extends AbstractSolver {
             strat.addFilesPath("src/main/java/org/unical/server/solvers/tommardo/encodings/searchForRumStrat");
             handler.addProgram(strat);
 
-            /*NOTE if we want more implementations:*/
+            //NOTE if we want more implementations:*
             //strat.clearAll(); //and add other strategies into the handler!
 
             //3. generate answer set (just one since there is just a solution.)
             AnswerSet result = getAnswerSet();
-
+            System.out.println(result.toString());
             //4. get the consequent action
             return getAction(result);
+
+            //Command c = new Command();
+            //c.generateRandomCommand();
+            //return c.getCommand();
+
 
         }catch(Exception e){
             e.printStackTrace();

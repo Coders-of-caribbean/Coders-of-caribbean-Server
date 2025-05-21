@@ -29,6 +29,7 @@ public class Controller {
     public ResponseEntity<Output> solve(@RequestBody Input input) {
         Output output = new Output();
 
+
         List<CompletableFuture<Void>> futures = solvers.stream()
                 .filter(s -> input.getInput().containsKey(s.getBeanName()))
                 .map(s -> CompletableFuture.runAsync(()->{
