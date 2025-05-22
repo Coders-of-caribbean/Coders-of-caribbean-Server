@@ -56,33 +56,26 @@ public class Solver extends AbstractSolver {
     public String solve(PlayerData data) {
         try{
             handler.removeAll();
+            nearest_rum.clearPrograms();
             addFacts(nearest_rum, data);
             handler.addProgram(nearest_rum);
             AnswerSet result = getAnswerSet();
             TargetFact target = getTarget(result);
 
+            boolean removed = handler.removeProgram(nearest_rum);
             handler.removeAll();
-            handler.removeProgram(nearest_rum);
+            path_finding.clearPrograms();
             addFacts(path_finding, data);
             path_finding.addObjectInput(target);
             handler.addProgram(path_finding);
             result = getAnswerSet();
             handler.removeProgram(path_finding);
-
             return getAction(result);
 
         }catch(Exception e){
             e.printStackTrace();
         }
-        return "0 0 0";
-    }
-
-    private void addStrategy(PlayerData data){
-        handler.removeAll();
-        InputProgram strat = new ASPInputProgram();
-        strat.addFilesPath(encodingsPath + "program");
-        handler.addProgram(strat);
-        addFacts(strat, data);
+        return "1 0 0";
     }
 }
 

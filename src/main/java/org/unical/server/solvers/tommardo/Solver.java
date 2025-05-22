@@ -1,4 +1,4 @@
-package org.unical.server.solvers.tommardo.sol;
+package org.unical.server.solvers.tommardo;
 
 import it.unical.mat.embasp.base.InputProgram;
 import it.unical.mat.embasp.languages.asp.ASPInputProgram;
@@ -12,5 +12,5 @@ import java.util.logging.Logger;
 
 @Component("thommardo")
 public class Solver extends AbstractSolver {
-
 }
+
