@@ -106,8 +106,8 @@ public abstract class AbstractSolver implements BeanNameAware {
      * questa funzione serve per ottenere un {@link AnswerSet} ottimale se esiste, uno generico altrimenti.
      *
      * @return un {@link AnswerSet} ottimo se esiste, un generico altrimenti.
-     * @throws {@link RuntimeException} se INCOHERENT
-     * @throws {@link NoSuchElementException} se non è presente nessun {@link AnswerSet}
+     * @throws RuntimeException se il risultato è incoerente.
+     * @throws NoSuchElementException se non è presente alcun {@link AnswerSet}.
      */
     protected AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
