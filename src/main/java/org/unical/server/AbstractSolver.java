@@ -109,11 +109,17 @@ public abstract class AbstractSolver implements BeanNameAware {
      */
     protected AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
-        try{
+
+        if(answerSets.getOutput().contains("INCOHERENT"))
+            throw new RuntimeException("INCOHERENT ANSWER SET");
+
+        if(!answerSets.getOptimalAnswerSets().isEmpty())
             return answerSets.getOptimalAnswerSets().getFirst();
-        } catch (NoSuchElementException e){
+
+        if(!answerSets.getAnswersets().isEmpty())
             return answerSets.getAnswersets().getFirst();
-        }
+
+        throw new NoSuchElementException();
     }
 
     /**
@@ -174,6 +180,7 @@ public abstract class AbstractSolver implements BeanNameAware {
         InputProgram inputProgram = new ASPInputProgram();
         Random rand = new Random();
         try {
+            /*
             handler.removeAll();
             String randomCommand = String.format("move(%d,%d,%d)", rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21) );
             inputProgram.addProgram(randomCommand);
@@ -184,6 +191,9 @@ public abstract class AbstractSolver implements BeanNameAware {
             assert result != null;
 
             return getAction(result);
+
+             */
+            return "1 1 1";
         } catch (Exception e) {
             Logger.getAnonymousLogger().warning(e.getMessage());
             return String.format("%d %d %d",rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21)  );
