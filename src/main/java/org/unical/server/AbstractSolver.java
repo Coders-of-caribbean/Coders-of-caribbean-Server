@@ -19,6 +19,7 @@ import org.unical.server.predicates.actions.Move;
 import org.unical.server.predicates.objects.MineFact;
 import org.unical.server.predicates.objects.BarrelFact;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
@@ -110,16 +111,22 @@ public abstract class AbstractSolver implements BeanNameAware {
     protected AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
 
+        if(!answerSets.getErrors().isEmpty())
+            throw new RuntimeException("Ci sono alcuni problemi nel programma logico " + answerSets.getErrors());
+
         if(answerSets.getOutput().contains("INCOHERENT"))
-            throw new RuntimeException("INCOHERENT ANSWER SET");
+            throw new RuntimeException("Il programma risulta essere incoerente.");
 
-        if(!answerSets.getOptimalAnswerSets().isEmpty())
-            return answerSets.getOptimalAnswerSets().getFirst();
+        List<AnswerSet> answerSetsList = answerSets.getAnswersets();
+        if(answerSetsList.isEmpty())
+            throw new NoSuchElementException("Non è stato trovato nessun answerset");
 
-        if(!answerSets.getAnswersets().isEmpty())
-            return answerSets.getAnswersets().getFirst();
-
-        throw new NoSuchElementException();
+        try {
+            List<AnswerSet> optimal = answerSets.getOptimalAnswerSets();
+            return optimal.getFirst();
+        } catch (NoSuchElementException e) {
+            return answerSetsList.getFirst();
+        }
     }
 
     /**

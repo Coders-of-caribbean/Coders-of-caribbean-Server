@@ -29,6 +29,8 @@ nearest_rum(player_pos(X,Y), cell(X1,Y1), Distance) :-
                                                     distance(Distance, cell(X,Y), cell(X1,Y1)), barrel(X1,Y1,_),
                                                     Distance = #min{D : distance(D, cell(X,Y), cell(X0,Y0)), barrel(X0,Y0,_)}.
 
-choose(X,Y) :- nearest_rum(player_pos(_,_), cell(X,Y),_).
+choose(X,Y) | not_choose(X,Y) :- nearest_rum(player_pos(_,_), cell(X,Y),_).
 :- #count{X,Y : choose(X,Y)} != 1.
+
 #show choose/2.
+#show nearest_rum/3.
