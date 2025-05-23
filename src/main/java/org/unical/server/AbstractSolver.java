@@ -110,7 +110,7 @@ public abstract class AbstractSolver implements BeanNameAware {
      * @throws RuntimeException se il risultato è incoerente o ci sono errori di sintassi.
      * @throws NoSuchElementException se non è presente alcun {@link AnswerSet}.
      */
-    protected AnswerSet getAnswerSet() {
+    public AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
 
         if(!answerSets.getErrors().isEmpty())
