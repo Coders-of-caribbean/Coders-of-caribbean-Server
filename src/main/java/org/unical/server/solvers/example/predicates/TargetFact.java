@@ -1,4 +1,4 @@
-package org.unical.server.solvers.sahur.predicates;
+package org.unical.server.solvers.example.predicates;
 
 import it.unical.mat.embasp.languages.Id;
 import it.unical.mat.embasp.languages.Param;
