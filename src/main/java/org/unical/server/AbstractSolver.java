@@ -108,7 +108,7 @@ public abstract class AbstractSolver implements BeanNameAware {
      *
      * @return un {@link AnswerSet} ottimo se esiste, un generico altrimenti.
      */
-    public AnswerSet getAnswerSet() {
+    protected AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
 
         if(!answerSets.getErrors().isEmpty())

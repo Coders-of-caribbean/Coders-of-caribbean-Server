@@ -1,26 +1,29 @@
 package org.unical.server.solvers.sahur;
 
+
+import it.unical.mat.embasp.base.InputProgram;
 import it.unical.mat.embasp.languages.asp.ASPInputProgram;
 import it.unical.mat.embasp.languages.asp.ASPMapper;
+import it.unical.mat.embasp.languages.asp.AnswerSet;
+import it.unical.mat.embasp.languages.asp.AnswerSets;
 import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
 import org.unical.server.model.PlayerData;
-import org.unical.server.predicates.actions.Move;
 import org.unical.server.solvers.sahur.predicates.TargetFact;
-import org.unical.server.solvers.sahur.program.ASPVariableProgram;
 
+import java.util.Map;
+import java.util.Random;
 import java.util.logging.Logger;
 
 @Component("sahur")
 public class Solver extends AbstractSolver {
     private final String encodingsPath = "src/main/java/org/unical/server/solvers/sahur/program/";
 
-    private ASPInputProgram domain;
-    private ASPInputProgram facts;
-    private ASPVariableProgram<TargetFact> strategy;
-    private ASPVariableProgram<Move> pathfinding;
-
+    private static ASPInputProgram strategy;
+    private static ASPInputProgram base_program;
+    private static ASPInputProgram path_finding;
+    private static ASPInputProgram nearest_rum;
 
     static {
         try {
@@ -31,33 +34,44 @@ public class Solver extends AbstractSolver {
         }
     }
 
-    public Solver() {
+    public Solver(){
         super();
-        strategy = new ASPVariableProgram<>(encodingsPath + "modules/target_picker", TargetFact.class);
-        pathfinding =  new ASPVariableProgram<>(encodingsPath + "modules/path_finding", Move.class);
-
-        domain = new ASPInputProgram(encodingsPath + "modules/domain");
-        facts = new ASPInputProgram();
-
-        handler.addProgram(domain);
-        handler.addProgram(facts);
+        base_program = new ASPInputProgram();
+        path_finding = new ASPInputProgram();
+        nearest_rum = new ASPInputProgram();
+        nearest_rum.addFilesPath(encodingsPath + "find_rum");
+        path_finding.addFilesPath(encodingsPath + "path_finding");
+        strategy = new ASPInputProgram();
     }
 
-    private void addFacts(PlayerData data){
-        facts.clearPrograms();
-        super.addFacts(facts, data);
+    private TargetFact getTarget(AnswerSet answerSet) {
+        try {
+            return (TargetFact) answerSet.getAtoms().stream().filter((predicate) -> predicate instanceof TargetFact).findFirst().get();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public String solve(PlayerData data) {
         try{
-            addFacts(data);
-            strategy.addProgram(facts.getPrograms());
-            TargetFact target = strategy.compute(this);
-            //pathfinding.addObjectInput(target);
-            //Move move = pathfinding.compute(this);
-            //return move.toString();
-            return null;
+            handler.removeAll();
+            nearest_rum.clearPrograms();
+            addFacts(nearest_rum, data);
+            handler.addProgram(nearest_rum);
+            AnswerSet result = getAnswerSet();
+            TargetFact target = getTarget(result);
+
+            boolean removed = handler.removeProgram(nearest_rum);
+            handler.removeAll();
+            path_finding.clearPrograms();
+            addFacts(path_finding, data);
+            path_finding.addObjectInput(target);
+            handler.addProgram(path_finding);
+            result = getAnswerSet();
+            handler.removeProgram(path_finding);
+            return getAction(result);
+
         }catch(Exception e){
             e.printStackTrace();
         }
