@@ -121,7 +121,7 @@ public abstract class AbstractSolver implements BeanNameAware {
 
         List<AnswerSet> answerSetsList = answerSets.getAnswersets();
         if(answerSetsList.isEmpty())
-            throw new NoSuchElementException("Non è stato trovato nessun answerset");
+            throw new NoSuchElementException("Non è stato trovato nessun answerset " + answerSets.getOutput());
 
         try {
             List<AnswerSet> optimal = answerSets.getOptimalAnswerSets();
