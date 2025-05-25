@@ -58,7 +58,7 @@ public class Solver extends AbstractSolver {
         InputProgram strat = new ASPInputProgram();
         if(data.getBarrels().size() == 0)
             strat.addFilesPath(encodingsPath + "hunt");
-        else if(data.getPlayerInfo().getRum() < 50) {
+        else if(data.getPlayerInfo().getRum() < 80) {
             strat.addFilesPath(encodingsPath + "survive");
        } else{
             strat.addFilesPath(encodingsPath + "patrol");
