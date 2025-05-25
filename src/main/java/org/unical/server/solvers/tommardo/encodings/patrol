@@ -1,0 +1,426 @@
+
+r(3).
+speed(0..2).
+
+dxOdd(0,1). dxOdd(1,1). dxOdd(2,0). dxOdd(3,-1). dxOdd(4,0). dxOdd(5,1).
+dyOdd(0,0). dyOdd(1,-1). dyOdd(2,-1). dyOdd(3,0). dyOdd(4,1). dyOdd(5,1).
+
+dxEven(0,1). dxEven(1,0). dxEven(2,-1). dxEven(3,-1). dxEven(4,-1). dxEven(5,0).
+dyEven(0,0). dyEven(1,-1). dyEven(2,-1). dyEven(3,0). dyEven(4,1). dyEven(5,1).
+
+% se mi muovo di velocità 2 devo preoccuparmi del vicinato di raggio 2
+dxR2Even(0,2). dxR2Even(1,1). dxR2Even(2,-1). dxR2Even(3,-2). dxR2Even(4,-1). dxR2Even(5,1).
+dyR2Even(0,0). dyR2Even(1,-2). dyR2Even(2,-2). dyR2Even(3,0). dyR2Even(4,2). dyR2Even(5,2).
+
+dxR2Odd(0,2). dxR2Odd(1,1). dxR2Odd(2,-1). dxR2Odd(3,-2). dxR2Odd(4,-1). dxR2Odd(5,1).
+dyR2Odd(0,0). dyR2Odd(1,-2). dyR2Odd(2,-2). dyR2Odd(3,0). dyR2Odd(4,2). dyR2Odd(5,2).
+
+row(0..22).
+col(0..20).
+cell(X,Y) :- row(X), col(Y).
+
+pari(0).
+pari(X) :- dispari(Y), Y = X-1, X <= 22.
+dispari(X) :- pari(Y), Y = X-1, X <= 22.
+
+%proiezioni per safety
+barrelPos(X,Y) :- barrel(X,Y,_).
+playerPos(X,Y) :- player(X,Y,_,_,_).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            % CALCOLO DISTANZE TRA ENTITA' %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cell3D(R,C, X, Y, Z) :- cell(R,C),
+                        &mod(C,2;Mod),
+                        X = R - (C-Mod)/2,
+                        Z = C,
+                        Y = -X-Z.
+
+player3D(X,Y,Z) :- cell3D(R,C,X,Y,Z),
+                   player(R,C,_,_,_).
+
+enemy3D(X,Y,Z) :-  cell3D(R,C,X,Y,Z),
+                   enemy(R,C,_,_,_).
+
+barrel3D(X,Y,Z) :- cell3D(R,C,X,Y,Z),
+                   barrel(R,C,_).
+
+mine3D(X,Y,Z) :-   cell3D(R,C,X,Y,Z),
+                   mine(R,C).
+
+entity(X,Y,Z) :- player3D(X,Y,Z).
+entity(X,Y,Z) :- enemy3D(X,Y,Z).
+entity(X,Y,Z) :- barrel3D(X,Y,Z).
+entity(X,Y,Z) :- mine3D(X,Y,Z).
+
+distance(X1,Y1,Z1,X2,Y2,Z2,D) :- cell3D(_,_,X1,Y1,Z1),
+                                 entity(X2,Y2,Z2),
+                                 &abs(X1-X2;XA),
+                                 &abs(Y1-Y2;YA),
+                                 &abs(Z1-Z2;ZA),
+                                 D = (XA + YA + ZA) /2.
+
+e_b(RN,CN,RB,CB,D) :- distance(XN,YN,ZN,XB,YB,ZB,D),
+                       enemy3D(XN,YN,ZN),
+                       barrel3D(XB,YB,ZB),
+                       cell3D(RN,CN,XN,YN,ZN),
+                       cell3D(RB,CB,XB,YB,ZB).
+
+b_b(RN,CN,RB,CB,D) :- distance(XN,YN,ZN,XB,YB,ZB,D),
+                       barrel3D(XN,YN,ZN),
+                       barrel3D(XB,YB,ZB),
+                       cell3D(RN,CN,XN,YN,ZN),
+                       cell3D(RB,CB,XB,YB,ZB),
+                       XN != XB.
+
+b_b(RN,CN,RB,CB,D) :- distance(XN,YN,ZN,XB,YB,ZB,D),
+                       barrel3D(XN,YN,ZN),
+                       barrel3D(XB,YB,ZB),
+                       cell3D(RN,CN,XN,YN,ZN),
+                       cell3D(RB,CB,XB,YB,ZB),
+                       YN != YB.
+
+
+p_e(RN,CN,D) :- distance(XP,YP,ZP,XN,YN,ZN,D),
+                player3D(XP,YP,ZP),
+                enemy3D(XN,YN,ZN),
+                cell3D(RN,CN,XN,YN,ZN).
+
+
+p_b(R,C,D) :- distance(X,Y,Z,X2,Y2,Z2,D),
+              barrel3D(X,Y,Z),
+              player3D(X2,Y2,Z2),
+              cell3D(R,C,X,Y,Z).
+
+
+%distanza cella generica/barile
+c_b(RC,CC,RB,CB,D) :- distance(XC,YC,ZC,XB,YB,ZB,D),
+                    cell3D(RC,CC,XC,YC,ZC),
+                    barrel3D(XB,YB,ZB),
+                    cell3D(RB,CB,XB,YB,ZB).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        % COMPUTAZIONE DEL PERCORSO OTTIMO %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%{goalPos(X, Y): cell(X,Y)} = 1.
+{objectiveCell(X,Y): cell(X,Y) } = 1.
+:~ not objectiveCell(X1,Y1), cell(X1,Y1), #count{X2,Y2: c_b(X1,Y1,X2,Y2,D), r(K), D<K}=N. [N@3, X1,Y1,N]
+
+%voglio andare nella cella il cui numero di barili vicini ad essa è massimo:
+%dovrò pagare un N che è il più piccolo possibile e cioè muovermi verso una cella goal il cui N è massimo.
+%:~ not goalPos(X1,Y1), cell(X1,Y1), #count{X2,Y2: c_b(X1,Y1,X2,Y2,D), r(K), D<K}=N. [N@3, X1,Y1,N]
+
+% Se mi trovo nella cella obiettivo ed un nemico è a meno di 3 celle di distanza da me ci sono 2 scenari:
+%       - Il nemico ha meno vita di me -> lo attacco
+%       - il nemico ha più vita di me -> prendo il barile più vicino a me
+
+enemyNearby(X,Y) :- player(X1,Y1,_,_,_), objectiveCell(X1,Y1), enemy(X,Y,_,_,_), p_e(X,Y,D), D < 3, X1 !=X.
+enemyNearby(X,Y) :- player(X1,Y1,_,_,_), objectiveCell(X1,Y1), enemy(X,Y,_,_,_), p_e(X,Y,D), D < 3, Y1 !=Y.
+
+goalPos(X,Y) :- enemyNearby(X,Y), player(_,_,R1,_,_), enemy(X,Y,R2,_,_), R1 > R2.
+
+nearestBarrel(X,Y) :- p_b(X,Y,K), #min{D : p_b(_,_,D)} = K.
+goalPos(X,Y) :- enemyNearby(_,_), nearestBarrel(X,Y), player(_,_,R1,_,_), enemy(X1,Y1,R2,_,_), R1 < R2, X != X1, Y != Y1.
+
+noEnemyNearby :- #count{X,Y: enemyNearby(X,Y)} = 0.
+goalPos(X,Y) :- objectiveCell(X,Y), noEnemyNearby.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        % CALCOLO COORDINATE PRUA E POPPA %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% PLAYER
+
+dirMin4 :- player(_,_,_,_,Dir), Dir != 0, Dir != 3, Dir < 4.
+dirMag3 :- player(_,_,_,_,Dir), Dir != 0, Dir > 3.
+
+{playerBow(X,Y): cell(X,Y)} = 1.
+{playerStern(X,Y): cell(X,Y)} = 1.
+
+:- player(X,Y,_,_,Dir), pari(Y), dxEven(Dir,Xoff), dyEven(Dir,Yoff),
+   not playerBow(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1).
+
+:- player(X,Y,_,_,Dir), dispari(Y), dxOdd(Dir,Xoff), dyOdd(Dir,Yoff),
+   not playerBow(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1).
+
+% se la direzione del player è 0 oppure 3 allora la stern si trova in posizione
+% perfettamente opposta alla bow, altrimenti si trova a 3 direzioni di distanza dalla bow
+
+:- not dirMin4, not dirMag3,
+   player(X,Y,_,_,Dir), pari(Y), dxEven(Dir,Xoff), dyEven(Dir,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X - Xoff, Y1 = Y - Yoff,
+   cell(X1, Y1).
+
+:- not dirMin4, not dirMag3,
+   player(X,Y,_,_,Dir), dispari(Y), dxOdd(Dir,Xoff), dyOdd(Dir,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X - Xoff, Y1 = Y - Yoff,
+  cell(X1, Y1).
+
+:- dirMin4, not dirMag3,
+   player(X,Y,_,_,Dir), pari(Y), dxEven(DirOff,Xoff), dyEven(DirOff,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir + 3.
+
+:- dirMin4, not dirMag3,
+   player(X,Y,_,_,Dir), dispari(Y), dxOdd(DirOff,Xoff), dyOdd(DirOff,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir + 3.
+
+:- not dirMin4, dirMag3,
+   player(X,Y,_,_,Dir), pari(Y), dxEven(DirOff,Xoff), dyEven(DirOff,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir - 3.
+
+:- not dirMin4, dirMag3,
+   player(X,Y,_,_,Dir), dispari(Y), dxOdd(DirOff,Xoff), dyOdd(DirOff,Yoff),
+   not playerStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir - 3.
+
+
+% enemies
+{enemyBow(X,Y): cell(X,Y)} = 2.
+{enemyStern(X,Y): cell(X,Y)} = 2.
+
+% mi devo assicurare di fare riferimento allo specifico nemico che si trova in X,Y
+dirEnemyMag3(X,Y) :- enemy(X,Y,_,_,Dir), Dir != 0, Dir > 3.
+dirEnemyMin4(X,Y) :- enemy(X,Y,_,_,Dir), Dir != 0, Dir != 3, Dir < 4.
+
+:- enemy(X,Y,_,_,Dir), pari(Y), dxEven(Dir,Xoff), dyEven(Dir,Yoff),
+   not enemyBow(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1).
+
+:- enemy(X,Y,_,_,Dir), dispari(Y), dxOdd(Dir,Xoff), dyOdd(Dir,Yoff),
+   not enemyBow(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1).
+
+:- not dirEnemyMin4(X,Y), not dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), pari(Y), dxEven(Dir,Xoff), dyEven(Dir,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X - Xoff, Y1 = Y - Yoff,
+   cell(X1, Y1).
+
+:- not dirEnemyMin4(X,Y), not dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), dispari(Y), dxOdd(Dir,Xoff), dyOdd(Dir,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X - Xoff, Y1 = Y - Yoff,
+   cell(X1, Y1).
+
+:- dirEnemyMin4(X,Y), not dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), pari(Y), dxEven(DirOff,Xoff), dyEven(DirOff,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir + 3.
+
+:- dirEnemyMin4(X,Y), not dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), dispari(Y), dxOdd(DirOff,Xoff), dyOdd(DirOff,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir + 3.
+
+:- not dirEnemyMin4(X,Y), dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), pari(Y), dxEven(DirOff,Xoff), dyEven(DirOff,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir - 3.
+
+:- not dirEnemyMin4(X,Y), dirEnemyMag3(X,Y),
+   enemy(X,Y,_,_,Dir), dispari(Y), dxOdd(DirOff,Xoff), dyOdd(DirOff,Yoff),
+   not enemyStern(X1,Y1),
+   X1 = X + Xoff, Y1 = Y + Yoff,
+   cell(X1, Y1), DirOff = Dir - 3.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        % CALCOLO VICINATO DELLA NAVE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% devo avere dei fatti del tipo:
+% bowNeighbour(X,Y,Dir)
+% pivotNeighbour(X,Y,Dir)
+% sternNeighbour(X,Y,Dir)
+
+dirs(0..5).
+
+bowNeighbour(X1,Y1,Dir) :- playerBow(X,Y),
+                           pari(Y), dirs(Dir),
+                           dxEven(Dir,Xoff), dyEven(Dir, Yoff),
+                           X1 = X + Xoff, Y1 = Y + Yoff,
+                           cell(X1, Y1).
+
+bowNeighbour(X1,Y1,Dir) :- playerBow(X,Y),
+                           dispari(Y), dirs(Dir),
+                           dxOdd(Dir,Xoff), dyOdd(Dir, Yoff),
+                           X1 = X + Xoff, Y1 = Y + Yoff,
+                           cell(X1, Y1).
+
+pivotNeighbour(X1,Y1,Dir) :- playerPos(X,Y),
+                             pari(Y), dirs(Dir),
+                             dxEven(Dir,Xoff), dyEven(Dir, Yoff),
+                             X1 = X + Xoff, Y1 = Y + Yoff,
+                             cell(X1, Y1).
+
+pivotNeighbour(X1,Y1,Dir) :- playerPos(X,Y),
+                             dispari(Y), dirs(Dir),
+                             dxOdd(Dir,Xoff), dyOdd(Dir, Yoff),
+                             X1 = X + Xoff, Y1 = Y + Yoff,
+                             cell(X1, Y1).
+
+sternNeighbour(X1,Y1,Dir) :- playerStern(X,Y),
+                             pari(Y), dirs(Dir),
+                             dxEven(Dir,Xoff), dyEven(Dir, Yoff),
+                             X1 = X + Xoff, Y1 = Y + Yoff,
+                             cell(X1, Y1).
+
+sternNeighbour(X1,Y1,Dir) :- playerStern(X,Y),
+                             dispari(Y), dirs(Dir),
+                             dxOdd(Dir,Xoff), dyOdd(Dir, Yoff),
+                             X1 = X + Xoff, Y1 = Y + Yoff,
+                             cell(X1, Y1).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % CALCOLO DEL VICINATO SAFE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+enemyCell(X,Y) :- enemy(X,Y,_,_,_).
+enemyCell(X,Y) :- enemyStern(X,Y).
+enemyCell(X,Y) :- enemyBow(X,Y).
+
+neighbourFreeFromMine(X,Y,Dir) :- bowNeighbour(X,Y, Dir), not mine(X, Y).
+neighbourFreeFromMine(X,Y,Dir) :- pivotNeighbour(X, Y, Dir), not mine(X, Y).
+neighbourFreeFromMine(X,Y,Dir) :- sternNeighbour(X, Y, Dir), not mine(X, Y).
+
+neighbourFreeFromEnemy(X,Y,Dir) :- bowNeighbour(X,Y, Dir), not enemyCell(X, Y).
+neighbourFreeFromEnemy(X,Y,Dir) :- pivotNeighbour(X,Y, Dir), not enemyCell(X, Y).
+neighbourFreeFromEnemy(X,Y,Dir) :- sternNeighbour(X,Y, Dir), not enemyCell(X, Y).
+
+%neighbourFreeFromMine(X,Y,Dir) :- bowNeighbourR2(X,Y, Dir), not mine(X, Y).
+%neighbourFreeFromMine(X,Y,Dir) :- pivotNeighbourR2(X, Y, Dir), not mine(X, Y).
+%neighbourFreeFromMine(X,Y,Dir) :- sternNeighbourR2(X, Y, Dir), not mine(X, Y).
+
+%neighbourFreeFromEnemy(X,Y,Dir) :- bowNeighbourR2(X,Y, Dir), not enemyCell(X, Y).
+%neighbourFreeFromEnemy(X,Y,Dir) :- pivotNeighbourR2(X,Y, Dir), not enemyCell(X, Y).
+%neighbourFreeFromEnemy(X,Y,Dir) :- sternNeighbourR2(X,Y, Dir), not enemyCell(X, Y).
+
+safeNeighbour(X, Y, Dir) :- bowNeighbour(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+safeNeighbour(X, Y, Dir) :- pivotNeighbour(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+safeNeighbour(X, Y, Dir) :- sternNeighbour(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+
+%safeNeighbour(X, Y, Dir) :- bowNeighbourR2(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+%safeNeighbour(X, Y, Dir) :- pivotNeighbourR2(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+%safeNeighbour(X, Y, Dir) :- sternNeighbourR2(X,Y, Dir), neighbourFreeFromMine(X,Y,Dir), neighbourFreeFromEnemy(X,Y,Dir).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                % ROTAZIONI %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% puoi ruotare solo se non ci sono mine nel tuo vicinato, altrimenti prosegui diritto
+% se c'è una mina di fronte a te devi per forza andare in una cella del vicinato che sia safe
+% puoi rimanere incastrato! ci vuole una move default che quando tutte le condizioni sono vere:
+% c'è una mina nel percorso;
+% c'è una mina di fronte a te;
+% c'è una mina nel tuo vicinato ma non di fronte a te;
+% allora prosegui lungo il percorso.
+
+% se c'è una mina nel vicinato non di fronte alla nave allora non è safe girarsi
+%pericoloVicinato :- pivotNeighbour(X,Y,_), mine(X,Y).
+%pericoloVicinato :- pivotNeighbour(X,Y,_), enemyCell(X,Y).
+
+% per quanyo riguarda la bow, devo assicurarmi che la mina non sia esattamente di fronte
+% alla nave, altrimenti va in conflitto col vincolo di mina di fronte
+%pericoloVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), mine(X,Y), D != D1.
+%pericoloVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), enemyCell(X,Y), D != D1.
+
+%pericoloVicinato :- sternNeighbour(X,Y,_), mine(X,Y).
+%pericoloVicinato :- sternNeighbour(X,Y,_), enemyCell(X,Y).
+
+% se c'è una mina di fronte alla nave non è possibile proseguire diritti
+%pericoloDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), mine(X,Y).
+%pericoloDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), enemyCell(X,Y).
+
+
+%minaVicinatoR1 :- pivotNeighbour(X,Y,_), mine(X,Y).
+%minaVicinatoR1 :- sternNeighbour(X,Y,_), mine(X,Y).
+%minaVicinatoR1 :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), mine(X,Y), D != D1.
+
+%naveVicinato :- pivotNeighbour(X,Y,_), enemyCell(X,Y).
+%naveVicinato :- sternNeighbour(X,Y,_), enemyCell(X,Y).
+%naveVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), enemyCell(X,Y), D != D1.
+
+%minaDiFronteR1 :- player(_,_,_,_,D), bowNeighbour(X,Y,D), mine(X,Y).
+%naveDiFronteR1 :- player(_,_,_,_,D), bowNeighbour(X,Y,D), enemyCell(X,Y).
+
+minaVicinato :- pivotNeighbour(X,Y,_), mine(X,Y).
+minaVicinato :- sternNeighbour(X,Y,_), mine(X,Y).
+minaVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), mine(X,Y), D != D1.
+
+minaDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), mine(X,Y).
+
+naveVicinato :- pivotNeighbour(X,Y,_), enemyCell(X,Y).
+naveVicinato :- sternNeighbour(X,Y,_), enemyCell(X,Y).
+naveVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), enemyCell(X,Y), D != D1.
+
+naveDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), enemyCell(X,Y).
+
+vicinatoSicuro :- not minaVicinato, not naveVicinato.
+fronteSicuro :- not minaDiFronte, not naveDiFronte.
+
+
+
+%vicinatoSicuro :- not minaVicinatoR1, not minaVicinatoR2, not naveVicinatoR1, not naveVicinatoR2.
+%fronteSicuro :- not minaDiFronteR1, not minaDiFronteR2, not naveDiFronteR1, not naveDiFronteR2.
+
+%vicinatoSicuro :- not minaVicinatoR1,  not naveVicinatoR1.
+%fronteSicuro :- not minaDiFronteR1,  not naveDiFronteR1.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            % MOVE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% per essere sicuri che la nave faccia sempre una mossa in una cella valida
+{move(2,X,Y): cell(X,Y)} = 1.
+
+% se c'è un pericolo nel vicinato non puoi che continuare diritto
+%mine(2,2).
+%:- not vicinatoSicuro, fronteSicuro, player(_,_,_,_,D), bowNeighbour(X,Y,D), not move(1,X,Y).
+
+move(2,X,Y) :- not vicinatoSicuro, fronteSicuro, player(_,_,_,_,D), bowNeighbour(X,Y,D), noEnemyNearby.
+
+% se c'è un pericolo di fronte a te non puoi che muoverti nella prima direzione sicura possibile
+%mine(3,3).
+%:- not fronteSicuro, vicinatoSicuro, nearestSafeNeighbour(X,Y,D), not move(1, X, Y).
+
+move(2,X,Y) :- not fronteSicuro, vicinatoSicuro, nearestSafeNeighbour(X,Y,D), noEnemyNearby.
+
+% se sia il vicinato che il fronte sono sicuri non puoi che proseguire verso l'obiettivo
+%:- fronteSicuro, vicinatoSicuro, goalPos(X,Y), not move(1,X,Y).
+
+move(2,X,Y) :- fronteSicuro, vicinatoSicuro, goalPos(X,Y), noEnemyNearby.
+
+move(2, X, Y) :- not noEnemyNearby, goalPos(X,Y).
+
+% se sei circondato da pericoli non puoi che proseguire verso l'obiettivo
+%:- not fronteSicuro, not vicinatoSicuro, goalPos(X,Y), not move(1,X,Y).
+move(2,X,Y) :- not fronteSicuro, not vicinatoSicuro, goalPos(X,Y), noEnemyNearby.
+
+
+#show move/3.
