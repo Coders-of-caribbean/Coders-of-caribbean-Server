@@ -30,9 +30,6 @@ public class Solver extends AbstractSolver {
             //2. variable program (strategy)
             addStrategy(data);
 
-            /*NOTE if we want more implementations:*/
-            //strat.clearAll(); //and add other strategies into the handler!
-
             //3. generate answer set (just one since there is just a solution.)
             AnswerSet result = getAnswerSet();
 
@@ -48,7 +45,10 @@ public class Solver extends AbstractSolver {
 
     private void addStrategy(PlayerData data){
         InputProgram strat = new ASPInputProgram();
+        strat.addFilesPath(encodingsPath + "_facts");
+
         strat.addFilesPath(encodingsPath + "survive");
+
         handler.addProgram(strat);
     }
 }
