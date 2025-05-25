@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.unical.server.AbstractSolver;
 
 import org.unical.server.model.PlayerData;
+import org.unical.server.predicates.PlayerFact;
 import org.unical.server.predicates.actions.Move;
 import org.unical.server.solvers.sahur.predicates.TargetFact;
 import org.unical.server.solvers.sahur.program.ASPVariableProgram;

@@ -1,0 +1,24 @@
+cell(0..22, 0..20).
+
+%---- Necessario per computare le celle ----%
+odd(N) :-  cell(N,_), N2 = N / 2, N2*2 != N.
+even(N) :- cell(N,_), not odd(N).
+
+% https://github.com/CodinGame/coders-of-the-caribbean/blob/master/Referee.java
+cube(XP,YP,ZP, cell(X,Y)) :- cell(X,Y), ZP=Y,  XP=X-(Y/2), even(Y), YP=-(XP+ZP).
+cube(XP,YP,ZP, cell(X,Y)) :- cell(X,Y), ZP=Y,  XP=X-(Y-1)/2, odd(Y), YP=-(XP+ZP).
+
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), X=X1+1, Y=Y1. % Common
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), X=X1, Y=Y1-1. % Common
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), X=X1-1, Y=Y1. % Common
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), X=X1, Y=Y1+1. % Common
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), odd(Y1), X=X1+1, Y=Y1+1.
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), odd(Y1), X=X1+1, Y=Y1-1.
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), even(Y1), X=X1-1, Y=Y1+1.
+neighbors(cell(X1, Y1), cell(X,Y)) :- cell(X,Y), even(Y1), X=X1-1, Y=Y1-1.
+
+dirEven(1,0,-1). dirEven(0,1,0). dirEven(5,0,1).
+dirEven(4,-1,1). dirEven(3,-1,0). dirEven(2,-1,-1).
+
+dirOdd(1,1,-1). dirOdd(0,1,0). dirOdd(5,1,1).
+dirOdd(4,0,1). dirOdd(3,-1,0). dirOdd(2,0,-1).
