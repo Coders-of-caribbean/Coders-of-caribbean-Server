@@ -65,10 +65,10 @@ public class Solver extends AbstractSolver {
             //strat.addFilesPath(encodingsPath + "hunt");
         else if(data.getPlayerInfo().getRum() <= 80) {
             strat.addFilesPath(encodingsPath + "survive");
-            stayStill = true;
+            stayStill = false;
        } else{
             strat.addFilesPath(encodingsPath + "patrol");
-            stayStill = true;
+            stayStill = false;
         }
 
         handler.addProgram(strat);
