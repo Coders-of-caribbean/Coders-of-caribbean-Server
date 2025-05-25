@@ -107,6 +107,7 @@ c_b(RC,CC,RB,CB,D) :- distance(XC,YC,ZC,XB,YB,ZB,D),
 %{goalPos(X, Y): cell(X,Y)} = 1.
 {objectiveCell(X,Y): cell(X,Y) } = 1.
 :~ not objectiveCell(X1,Y1), cell(X1,Y1), #count{X2,Y2: c_b(X1,Y1,X2,Y2,D), r(K), D<K}=N. [N@3, X1,Y1,N]
+:- objectiveCell(X,Y), mine(X,Y).
 
 %voglio andare nella cella il cui numero di barili vicini ad essa è massimo:
 %dovrò pagare un N che è il più piccolo possibile e cioè muovermi verso una cella goal il cui N è massimo.
