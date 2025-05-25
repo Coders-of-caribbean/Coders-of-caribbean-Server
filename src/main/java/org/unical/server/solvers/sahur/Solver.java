@@ -53,7 +53,8 @@ public class Solver extends AbstractSolver {
             Move move = pathfinding.compute(this);
             return move.toString();
         }catch(Exception e){
-            e.printStackTrace();
+            if(data.getBarrels().isEmpty())
+                return String.format("1 %d %d", (int) data.getPlayerInfo().getX(), (int) data.getPlayerInfo().getY());
         }
         return "1 0 0";
     }
