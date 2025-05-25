@@ -1,0 +1,89 @@
+% Definizione della griglia
+rows(0..22).
+cols(0..20).
+speed(1..2).
+
+cell(X,Y) :- rows(X), cols(Y).
+
+player_coord(X,Y) :- player(X,Y,_,_,_).
+
+odd(N) :-  cell(N,_), N2 = N / 2, N2*2 != N.
+even(N) :- cell(N,_), not odd(N).
+
+cell_adj(X,Y,X - 1,Y) :- cell(X,Y).
+cell_adj(X,Y,X + 1,Y) :- cell(X,Y).
+cell_adj(X,Y,X,Y - 1) :- cell(X,Y), odd(Y).
+cell_adj(X,Y,X + 1,Y - 1) :- cell(X,Y), odd(Y).
+cell_adj(X,Y,X,Y + 1) :- cell(X,Y), odd(Y).
+cell_adj(X,Y,X + 1,Y + 1) :- cell(X,Y), odd(Y).
+cell_adj(X,Y,X - 1,Y - 1) :- cell(X,Y), even(Y).
+cell_adj(X,Y,X,Y - 1) :- cell(X,Y), even(Y).
+cell_adj(X,Y,X - 1,Y + 1) :- cell(X,Y), even(Y).
+cell_adj(X,Y,X,Y + 1) :- cell(X,Y), even(Y).
+
+minezone(X,Y) :- mine(X,Y).
+minezone(Xa,Ya) :- mine(X,Y), cell_adj(X,Y,Xa,Ya).
+
+player_adj(Xa,Ya) :- player(X,Y,_,_,_), cell_adj(X,Y,Xa,Ya).
+
+neighbor(1,X,Y) :- player_adj(X,Y).
+neighbor(2,Xa,Ya) :- player_adj(X,Y), cell_adj(X,Y,Xa,Ya), not player_coord(Xa,Ya).
+
+ammissible_neighbor(S,X,Y) :- neighbor(S,X,Y), cell(X,Y).
+
+difference_neighbor_from_target(S,Dx,Dy,Xt,Yt,Xn,Yn) :- ammissible_neighbor(S,Xn,Yn), target(Xt,Yt), not minezone(Xn,Yn), Dx = Xn - Xt, Dy = Yn - Yt.
+distance_neighbor_from_target(Dnt,S,Xt,Yt,Xn,Yn) :- difference_neighbor_from_target(S,Dx,Dy,Xt,Yt,Xn,Yn), min_dist_target(Dpt), Dnt = Dx*Dx + Dy*Dy, Dnt < Dpt.
+min_dist_neighbor_from_target(D) :- D = #min { D1 : distance_neighbor_from_target(D1,S,Xt,Yt,Xn,Yn) }.
+closest_neighbor(S,Xn,Yn) :- distance_neighbor_from_target(D,S,Xt,Yt,Xn,Yn), min_dist_neighbor_from_target(D).
+
+difference_from_barrel(Dx, Dy, Xb, Yb) :- player(Xp,Yp,_,_,_), barrel(Xb,Yb,_), Dx = Xp - Xb, Dy = Yp - Yb.
+distance_from_barrel(D, Xb, Yb) :- difference_from_barrel(Dx, Dy, Xb, Yb), D = Dx*Dx + Dy*Dy.
+min_dist(D) :- D = #min { D1 : distance_from_barrel(D1,X,Y) }.
+closest_rum(Xb,Yb) :- distance_from_barrel(D,Xb,Yb), min_dist(D).
+
+difference_enemy_from_barrel(Dx, Dy, Xe,Ye, Xb, Yb) :- enemy(Xe,Ye,_,_,_), barrel(Xb,Yb,_), Dx = Xe - Xb, Dy = Ye - Yb.
+distance_enemy_from_barrel(D, Xe, Ye, Xb, Yb) :- difference_enemy_from_barrel(Dx, Dy, Xe,Ye, Xb, Yb), D = Dx*Dx + Dy*Dy.
+min_dist_enemy_from_barrel(D) :- D = #min { D1 : distance_enemy_from_barrel(D1, Xe, Ye, Xb, Yb) }.
+closest_rum_for_enemy(Xb,Yb) :- distance_enemy_from_barrel(D, Xe, Ye, Xb, Yb), min_dist_enemy_from_barrel(D).
+
+difference_enemy(Dx, Dy, Xe, Ye) :- player(Xp,Yp,_,_,_), enemy(Xe,Ye,R,_,_), Dx = Xp - Xe, Dy = Yp - Ye, R > 0.
+distance_enemy(D, Xe, Ye) :- difference_enemy(Dx, Dy, Xe, Ye), D = Dx*Dx + Dy*Dy.
+min_dist_enemy(D) :- D = #min { D1 : distance_enemy(D1,X,Y) }.
+closest_enemy(Xe,Ye) :- distance_enemy(D,Xe,Ye), min_dist_enemy(D).
+
+weak_enemy(Xe, Ye) :- enemy(Xe, Ye, Re, _, _), player(Xp, Yp, Rp, _, _), closest_enemy(Xe,Ye), min_dist(Dpb), min_dist_enemy(Dpe), Re <= 20, Dpe <= Dpb, Rp > Re.
+weak_enemy_count(E) :- E = #count { Xe : weak_enemy(Xe, Ye) }.
+
+barrel_count(B) :- B = #count { X : barrel(X,Y,Q) }.
+closest_neighbor_count(N) :- N = #count { X : closest_neighbor(S,X,Y) }.
+mine_around_player(X,Y) :- mine(X,Y), player_adj(X,Y) .
+mine_around_player_count(M) :- M = #count { X : mine_around_player(X,Y) }.
+
+step(2) :- min_dist(D), weak_enemy_count(E), not closest_rum_for_enemy(Xb,Yb), closest_rum(Xb,Yb), closest_neighbor(S,_,_), S = 2, E = 0, D > 20 .
+step(2) :- min_dist(D), weak_enemy_count(E), not closest_rum_for_enemy(Xb,Yb), closest_rum(Xb,Yb), closest_neighbor_count(N), N = 0, E = 0, D > 20 .
+step(1) :- min_dist(D), weak_enemy_count(E), not closest_rum_for_enemy(Xb,Yb), closest_rum(Xb,Yb), mine_around_player_count(M), E = 0, D <= 20, M = 0 .
+step(2) :- weak_enemy(Xe, Ye) .
+step(2) :- closest_rum_for_enemy(Xb,Yb), closest_rum(Xb,Yb), weak_enemy_count(E), min_dist_enemy_from_barrel(De), min_dist(Dp), E = 0, Dp <= De.
+step(1) :- closest_rum_for_enemy(Xb,Yb), closest_rum(Xb,Yb), weak_enemy_count(E), min_dist_enemy_from_barrel(De), min_dist(Dp), mine_around_player_count(M), E = 0, M = 0, Dp > De.
+
+step(2) :- mine_around_player_count(M), closest_neighbor(S,_,_), S = 2, M > 0 .
+step(2) :- mine_around_player_count(M), closest_neighbor_count(N), N = 0, M > 0 .
+
+step(0) :- barrel_count(B), player(_,_,Rp,_,_), closest_enemy(Xe,Ye), enemy(Xe,Ye,Re,_,_), B = 0, Re > Rp .
+step(1) :- barrel_count(B), player(_,_,Rp,_,_), closest_enemy(Xe,Ye), enemy(Xe,Ye,Re,_,_), B = 0, Re <= Rp .
+
+target(X,Y) :- closest_rum(X,Y), weak_enemy_count(E), E = 0 .
+target(X,Y) :- weak_enemy(X,Y), weak_enemy_count(E), E > 0 .
+target(X,Y) :- closest_enemy(X,Y), barrel_count(B), B = 0 .
+
+min_dist_target(D) :- min_dist(D), weak_enemy_count(E), E = 0 .
+min_dist_target(D) :- min_dist_enemy(D), weak_enemy_count(E), E > 0 .
+
+{move(S,X,Y): cell(X,Y), step(S)} = 1.
+
+:~ move(_,X,Y), mine(X,Y). [40@1,X,Y]
+:~ move(_,X,Y), not closest_neighbor(1,X,Y). [20@1,X,Y]
+:~ move(_,X,Y), not closest_neighbor(2,X,Y). [30@1,X,Y]
+:~ move(_,X,Y), not target(X,Y). [10@1,X,Y]
+
+#show move/3.
