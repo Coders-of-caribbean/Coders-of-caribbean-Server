@@ -16,6 +16,9 @@ import java.util.logging.Logger;
 
 @Component("sahur")
 public class Solver extends AbstractSolver {
-
+    @Override
+    public String solve(PlayerData data) {
+        return "0 0 0";
+    }
 }
 

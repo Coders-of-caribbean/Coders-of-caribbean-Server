@@ -21,6 +21,14 @@ public class Solver extends AbstractSolver {
         try{
             System.out.println(data.getBarrels());
             System.out.println(data.getMines());
+
+            for(Mine m : data.getMines()){
+                System.out.println("\n");
+                System.out.println(m.x);
+                System.out.println(m.y);
+            }
+
+            System.out.println(data.getPlayerInfo().getDirection());
             handler.removeAll();
             //1. fixed problem (facts)
             InputProgram program = new ASPInputProgram();
@@ -48,7 +56,14 @@ public class Solver extends AbstractSolver {
 
     private void addStrategy(PlayerData data){
         InputProgram strat = new ASPInputProgram();
-        strat.addFilesPath(encodingsPath + "survive");
+        if(data.getBarrels().size() == 0)
+            strat.addFilesPath(encodingsPath + "hunt");
+        else if(data.getPlayerInfo().getRum() < 50) {
+            strat.addFilesPath(encodingsPath + "survive");
+       } else{
+            strat.addFilesPath(encodingsPath + "patrol");
+        }
+
         handler.addProgram(strat);
     }
 }
