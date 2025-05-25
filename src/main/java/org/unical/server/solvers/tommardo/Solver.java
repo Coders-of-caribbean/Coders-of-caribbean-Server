@@ -11,6 +11,7 @@ import org.unical.server.model.*;
 public class Solver extends AbstractSolver {
 
     private final String encodingsPath = "src/main/java/org/unical/server/solvers/tommardo/encodings/";
+    public boolean stayStill = false;
 
     public Solver(){
         super();
@@ -37,6 +38,9 @@ public class Solver extends AbstractSolver {
 
             //2. variable program (strategy)
             addStrategy(data);
+            if(stayStill){
+                return "0 0 0";
+            }
 
             /*NOTE if we want more implementations:*/
             //strat.clearAll(); //and add other strategies into the handler!
@@ -57,11 +61,14 @@ public class Solver extends AbstractSolver {
     private void addStrategy(PlayerData data){
         InputProgram strat = new ASPInputProgram();
         if(data.getBarrels().size() == 0)
-            strat.addFilesPath(encodingsPath + "hunt");
+            stayStill = true;
+            //strat.addFilesPath(encodingsPath + "hunt");
         else if(data.getPlayerInfo().getRum() <= 80) {
             strat.addFilesPath(encodingsPath + "survive");
+            stayStill = true;
        } else{
             strat.addFilesPath(encodingsPath + "patrol");
+            stayStill = true;
         }
 
         handler.addProgram(strat);
