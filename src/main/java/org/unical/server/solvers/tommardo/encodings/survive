@@ -1,47 +1,100 @@
-%FATTI**
-row(0..22).
-col(0..20).
-cell(X,Y) :- row(X), col(Y).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % CALCOLO NEIGHBOUR PIU' VICINO AL BARILE OBIETTIVO %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pari(0).
-pari(X) :- dispari(Y), Y = X-1, X <= 22.
-dispari(X) :- pari(Y), Y = X-1, X <= 22.
+neighbourDistanceFromBarrel(X, Y, D) :-
+    goalPos(X1,Y1),
+    safeNeighbour(X, Y, Dir),
+    DX = X1 - X, &abs(DX;AX),
+    DY = Y1 - Y, &abs(DY;AY),
+    DZ = (X1 + Y1) - (X + Y), &abs(DZ;AZ),
+    S = AX + AY + AZ,
+    D = S / 2.
 
-%proiezioni per safety
-barrelPos(X,Y) :- barrel(X,Y,_).
-playerPos(X,Y) :- player(X,Y,_,_,_).
+minDistanceNeighbourBarrel(K) :- #min{D: neighbourDistanceFromBarrel(X,Y,D)}=K.
+nearestSafeNeighbour(X,Y,D) :- neighbourDistanceFromBarrel(X,Y,D), minDistanceNeighbourBarrel(D).
 
-%percorso
-perc(X,Y) | notPerc(X,Y) :- cell(X,Y).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                % ROTAZIONI %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%VICINATO**
-%vicinato in comune
-neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1+1.
-neighbour(X1,Y, X2,Y) :- perc(X1,Y), perc(X2, Y), X2 = X1-1.
-neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1+1.
-neighbour(X,Y1, X, Y2) :- perc(X,Y1), perc(X, Y2), Y2 = Y1-1.
+% puoi ruotare solo se non ci sono mine nel tuo vicinato, altrimenti prosegui diritto
+% se c'è una mina di fronte a te devi per forza andare in una cella del vicinato che sia safe
+% puoi rimanere incastrato! ci vuole una move default che quando tutte le condizioni sono vere:
+% c'è una mina nel percorso;
+% c'è una mina di fronte a te;
+% c'è una mina nel tuo vicinato ma non di fronte a te;
+% allora prosegui lungo il percorso.
 
-%riga pari
-neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1+1, pari(Y1).
-neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1-1, Y2 = Y1-1,  pari(Y1).
+minaVicinato :- pivotNeighbour(X,Y,_), mine(X,Y).
+minaVicinato :- sternNeighbour(X,Y,_), mine(X,Y).
+minaVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), mine(X,Y), D != D1.
 
-%riga dispari
-neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1-1, X1, dispari(Y1).
-neighbour(X1,Y1, X2,Y2) :- perc(X1,Y1), perc(X2, Y2), X2 = X1+1, Y2 = Y1+1, dispari(Y1).
+minaDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), mine(X,Y).
 
-%esattamente un istanza di barrelPos nel percorso
-:- #count{X,Y : perc(X,Y), barrelPos(X,Y)} != 1.
-%esattamente un vicinato dalla playerPos e dal barrelPos
-:- #count{X2,Y2 : perc(X1,Y1), playerPos(X1,Y1), neighbour(X1,Y1,X2,Y2)} != 1.
-:- #count{X1,Y1 : perc(X2,Y2), barrelPos(X2,Y2), neighbour(X1,Y1,X2,Y2)} != 1.
-%almeno due vicini da celle diverse da playerPos e barrelPos
-:- perc(X1,Y1), not playerPos(X1, Y1), not barrelPos(X1,Y1), #count{X2,Y2 : neighbour(X1,Y1,X2,Y2)} < 2.
+naveVicinato :- pivotNeighbour(X,Y,_), enemyCell(X,Y).
+naveVicinato :- sternNeighbour(X,Y,_), enemyCell(X,Y).
+naveVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D1), enemyCell(X,Y), D != D1.
 
-minaPresente :- perc(X,Y), mine(X,Y).
-:- perc(X,Y), barrelPos(X,Y), minaPresente.
+naveDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), enemyCell(X,Y).
 
-:~ perc(X,Y). [1@1, X,Y]
+vicinatoSicuro :- not minaVicinato, not naveVicinato.
+fronteSicuro :- not minaDiFronte, not naveDiFronte.
 
-move(1,X,Y) :- perc(X,Y), barrelPos(X,Y).
+% c'è un pericolo nel vicinato se c'è una cella pericolosa ovunque non di fronte alla nave
+%pericoloVicinato :- player(_,_,_,_,D), bowNeighbour(X,Y,D), unsafeNeighbour(X1,Y1,_), X!=X1, Y!=Y1.
+
+% c'è un pericolo di fronte se c'è una cella pericolosa esattamente di fronte alla anve
+%pericoloDiFronte :- player(_,_,_,_,D), bowNeighbour(X,Y,D), unsafeNeighbour(X,Y,D).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        % COMPUTAZIONE DEL PERCORSO OTTIMO %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%la goalPos non può non essere un barile
+{goalPos(X, Y): barrelPos(X,Y)} = 1.
+
+%preferisci muoverti verso una goalPos più vicina a te, rispetto ad un nemico
+:~ goalPos(X,Y), p_b(X,Y,D1), e_b(XN,YN,X,Y,D2), D1>D2. [1@3, X,Y,XN,YN,D1,D2]
+%penalizza la posizione goal più lontana (vai in quella più vicina)
+:~ goalPos(X,Y), p_b(X,Y,D).  [D@2, X,Y,D]
+%dato un barile che non è goal, pago la somma dei suoi valori: voglio far si che questa somma sia minima, quindi prendere il barile con più rum.
+:~ not goalPos(X,Y), barrel(X,Y,R). [R@1, X, Y, R]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            % MOVE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{move(1,X,Y): cell(X,Y)} = 1.
+
+% se c'è un pericolo nel vicinato non puoi che continuare diritto
+%mine(2,2).
+:- not vicinatoSicuro, fronteSicuro, player(_,_,_,_,D), bowNeighbour(X,Y,D), not move(1,X,Y).
+
+% se c'è un pericolo di fronte a te non puoi che muoverti nella prima direzione sicura possibile
+%mine(3,3).
+:- not fronteSicuro, vicinatoSicuro, nearestSafeNeighbour(X,Y,D), not move(1, X, Y).
+
+% se sia il vicinato che il fronte sono sicuri non puoi che proseguire verso l'obiettivo
+:- fronteSicuro, vicinatoSicuro, goalPos(X,Y), not move(1,X,Y).
+
+% se sei circondato da pericoli non puoi che proseguire verso l'obiettivo
+:- not fronteSicuro, not vicinatoSicuro, goalPos(X,Y), not move(1,X,Y).
 
 #show move/3.
+%#show unsafeNeighbour/3.
+%#show playerBow/2.
+%#show playerStern/2.
+%#show player/5.
+#show bowNeighbour/3.
+#show safeNeighbour/3.
+#show fronteSicuro/0.
+#show vicinatoSicuro/0.
+#show minaVicinato/0.
+#show minaDiFronte/0.
+#show naveVicinato/0.
+#show naveDiFronte/0.
+#show nearestSafeNeighbour/3.
+#show enemyCell/2.
+#show goalPos/2.
+#show mine/2.
