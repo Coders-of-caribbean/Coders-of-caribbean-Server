@@ -1,0 +1,79 @@
+player_pos(X,Y) :- player(X,Y,_,_,_).
+
+% Calcolo della distanza da cella(X0,Y0) a cella target tramite coordinate cubiche.
+distance(D, cell(X0,Y0)) :-
+    cube(XP0, YP0, ZP0, cell(X0,Y0)),
+    cube(XP1, YP1, ZP1, cell(X1,Y1)),
+    &abs(XP0 - XP1; ADX),
+    &abs(YP0 - YP1; ADY),
+    &abs(ZP0 - ZP1; ADZ), D = (ADX + ADY + ADZ) / 2, choose(X1,Y1).
+
+% ------------- Path finding ------------- %
+
+% Un candidates è un nodo che potrebbe far parte del cammino
+% Può far parte del cammino se c'è un nodo nel "in" a cui il candidates è collegato
+
+candidates(cell(X1,Y1), cell(X2,Y2), D) :-
+            in(_, cell(X1,Y1)),
+            neighbors(cell(X1,Y1), cell(X2, Y2)),
+            distance(D, cell(X2,Y2)).
+
+best_candidate(A, B) :-
+    candidates(A, B, D_best),
+    candidates(A, C, D_other),
+    D_best <= D_other.
+
+% ---------------- Guess ----------------- %
+in(cell(-1,-1), cell(X,Y)) :- player_pos(X,Y).
+in(cell(X0,Y0), cell(X1,Y1)) | out(cell(X0,Y0), cell(X1,Y1)) :- best_candidate(cell(X0,Y0), cell(X1,Y1)).
+
+% ---------------- Costi ----------------- %
+:~ mine(X,Y), in(_, cell(X,Y)). [20@1] % Attiva se rimuovi not mine nei candidates.
+:~ in(_,C). [1@1,C] % Minimizza il cammino, nota: questa è la ragione per cui non bisogna inserire controlli su in ridondanti, di base questo weak cercherà di minimizzare il cammino.
+% ----- Minimizza i nodi nel cammino ----- %
+
+% ---------------- Vincoli ----------------- %
+reached :- in(_, cell(X,Y)), choose(X,Y).
+:- not reached.
+% --- Bisogna raggiungere il nodo finale --- %
+
+% ---------------- Dirty things for speed ----------------- %
+speed :- choose(_,_,2), #count{N1,N2 : in(N1,N2)}>2.
+choose(X,Y) :- choose(X,Y,_).
+
+% ---------------- Output ----------------- %
+move(1, X,Y) :- player_pos(PX,PY), in(cell(PX,PY), cell(X,Y)), not speed.
+
+% Se la speed è attiva non mi sposto nel primo nodo ma nel secondo nodo.
+% Usare la speed comporta spostarsi di due caselle per round.
+move(2, X,Y) :- player_pos(PX,PY), in(cell(PX,PY), cell(X1,Y1)), in(cell(X1,Y1), cell(X,Y)), speed.
+
+%----------------- Devo rimanere fermo --------------------%
+stayOnPosition :- choose(XC,YC,_), player_pos(XC,YC).
+move(S,X,Y) :- choose(X,Y,S), stayOnPosition.
+
+%----------- capisco se sto attaccando ----------------
+attack :- choose(X,Y,_), enemy(X,Y,_,_,_).
+drunk :- not attack.
+
+% --------------- Schivo gli avversari se non li voglio attaccare
+:~ drunk, move(_,XM,YM), enemy(EX,EY,_,_,_), neighbors(cell(XM,YM), cell(EX,EY)). [5@1]
+
+:~ move(_,XM,YM), player_pos(XP,YP), neighbors(cell(XP,YP),cell(XN,YN)), mine(XN,YN), even(YP), DX = XM - XP, DY = YM - YP, player(XP,YP,_,_,DP), dirEven(DM,DX,DY), &abs(DP-DM; R), R>1. [R+2@1]
+:~ move(_,XM,YM), player_pos(XP,YP), neighbors(cell(XP,YP),cell(XN,YN)), mine(XN,YN), odd(YP), DX = XM - XP, DY = YM - YP, player(XP,YP,_,_,DP), dirOdd(DM,DX,DY), &abs(DP-DM; R), R>1. [R+2@1]
+
+:~ move(_,XM,YM), player_pos(XP,YP), even(YP), odd(YM), DX = (XM - XP)+1, DY = YM - YP, mine(XM+DX,YM+DY). [20@1]
+:~ move(_,XM,YM), player_pos(XP,YP), even(YP), odd(YM), DX = (XM - XP)-1, DY = -(YM - YP), mine(XP+DX,YP+DY). [10@1]
+
+:~ move(_,XM,YM), player_pos(XP,YP), odd(YP), even(YM), DX = (XM - XP)-1, DY = YM - YP, mine(XM+DX,YM+DY). [20@1]
+:~ move(_,XM,YM), player_pos(XP,YP), odd(YP), even(YM), DX = (XM - XP)-1, DY = -(YM - YP), mine(XP+DX,YP+DY). [10@1]
+
+:~ move(_,XM,YM), player_pos(XP,YP), even(YP), even(YM), DX = (XM - XP), DY = YM - YP, mine(XM+DX,YM+DY). [20@1]
+:~ move(_,XM,YM), player_pos(XP,YP), even(YP), even(YM), DX = -(XM - XP), DY = YM - YP, mine(XP+DX,YP+DY). [10@1]
+
+:~ move(_,XM,YM), player_pos(XP,YP), odd(YP), odd(YM), DX = (XM - XP), DY = YM - YP, mine(XM+DX,YM+DY). [20@1]
+:~ move(_,XM,YM), player_pos(XP,YP), odd(YP), odd(YM), DX = -(XM - XP), DY = YM - YP, mine(XP+DX,YP+DY). [10@1]
+
+#show move/3.
+#show attack/0.
+#show drunk/0.

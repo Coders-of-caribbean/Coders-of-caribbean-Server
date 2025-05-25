@@ -55,7 +55,8 @@ import java.util.stream.Collectors;
 @Setter
 public abstract class AbstractSolver implements BeanNameAware {
     protected Handler handler;
-    protected String beanName;
+    @Getter
+    private String beanName;
 
     private static final Class<?>[] classes = {Move.class, MineFact.class, BarrelFact.class, PlayerFact.class, EnemyFact.class};
 
@@ -106,8 +107,6 @@ public abstract class AbstractSolver implements BeanNameAware {
      * questa funzione serve per ottenere un {@link AnswerSet} ottimale se esiste, uno generico altrimenti.
      *
      * @return un {@link AnswerSet} ottimo se esiste, un generico altrimenti.
-     * @throws RuntimeException se il risultato è incoerente o ci sono errori di sintassi.
-     * @throws NoSuchElementException se non è presente alcun {@link AnswerSet}.
      */
     public AnswerSet getAnswerSet() {
         AnswerSets answerSets = (AnswerSets) handler.startSync();
@@ -120,7 +119,7 @@ public abstract class AbstractSolver implements BeanNameAware {
 
         List<AnswerSet> answerSetsList = answerSets.getAnswersets();
         if(answerSetsList.isEmpty())
-            throw new NoSuchElementException("Non è stato trovato nessun answerset " + answerSets.getOutput());
+            throw new NoSuchElementException("Non è stato trovato nessun answerset");
 
         try {
             List<AnswerSet> optimal = answerSets.getOptimalAnswerSets();
@@ -188,6 +187,7 @@ public abstract class AbstractSolver implements BeanNameAware {
         InputProgram inputProgram = new ASPInputProgram();
         Random rand = new Random();
         try {
+            /*
             handler.removeAll();
             String randomCommand = String.format("move(%d,%d,%d)", rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21) );
             inputProgram.addProgram(randomCommand);
@@ -198,6 +198,9 @@ public abstract class AbstractSolver implements BeanNameAware {
             assert result != null;
 
             return getAction(result);
+
+             */
+            return "1 1 1";
         } catch (Exception e) {
             Logger.getAnonymousLogger().warning(e.getMessage());
             return String.format("%d %d %d",rand.nextInt(1,3), rand.nextInt(0,23), rand.nextInt(0,21)  );

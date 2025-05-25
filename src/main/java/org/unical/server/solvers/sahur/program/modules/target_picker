@@ -1,0 +1,294 @@
+% ===============================================================
+% Utilties varie su posizione, numero di nemici, etc.
+% ===============================================================
+
+enemy_pos(X,Y) :- enemy(X,Y,_,_,_).
+player_pos(X,Y) :- player(X,Y,_,_,_).
+
+% ===============================================================
+% Utilties per il calcolo delle distanze
+% ===============================================================
+
+% Per evitare di computare celle non rilevanti.
+compute_distance(X,Y) :- barrel(X,Y,_).
+compute_distance(X,Y) :- enemy_pos(X,Y).
+compute_distance(X,Y) :- player_pos(X,Y).
+compute_distance(X,Y) :- mine(X,Y).
+
+distance(D, cell(X0,Y0), cell(X1,Y1)) :-
+    cube(XP0, YP0, ZP0, cell(X0,Y0)),
+    cube(XP1, YP1, ZP1, cell(X1,Y1)),
+    &abs(XP0 - XP1; ADX),
+    &abs(YP0 - YP1; ADY),
+    &abs(ZP0 - ZP1; ADZ),
+    D = (ADX + ADY + ADZ) / 2,
+    compute_distance(X0,Y0),
+    compute_distance(X1,Y1).
+
+nearest_enemy(enemy_pos(EX,EY), D) :-
+    player_pos(PX,PY),
+    enemy_pos(EX,EY),
+    distance(D, cell(PX,PY), cell(EX,EY)),
+    D = #min{Distance : distance(Distance, cell(PX,PY), cell(GEX,GEY)), enemy_pos(GEX,GEY)}.
+
+nearest_barrel(enemy_pos(EX,EY), barrel(BX,BY,BQ), D) :-
+    enemy_pos(EX,EY),
+    barrel(BX,BY,BQ),
+    distance(D, cell(EX,EY), cell(BX,BY)),
+    D = #min{Distance : distance(Distance, cell(EX,EY), cell(GBX,GBY)), barrel(GBX,GBY,GBQ)}.
+
+nearest_barrel(player_pos(PX,PY), barrel(BX,BY,BQ), D) :-
+    player_pos(PX,PY),
+    barrel(BX,BY,BQ),
+    distance(D, cell(PX,PY), cell(BX,BY)),
+    D = #min{Distance : distance(Distance, cell(PX,PY), cell(GBX,GBY)), barrel(GBX,GBY,GBQ)}.
+
+% Il barile con più rum nelle vicinanze.
+juiciest_barrel(barrel(BX,BY,BQ)) :-
+    player_pos(PX,PY),
+    nearest_barrel(player_pos(PX,PY), barrel(BX,BY,BQ),_),
+    Q = #max{Quantity : nearest_barrel(player_pos(PX,PY), barrel(_,_,Quantity))}.
+
+% ===============================================================
+%                           Not Worth
+% ===============================================================
+% Non tutti i barili sono degni del palato di un pirata.
+% Alcuni sono troppo lontani, altri già puntati da nemici,
+% e altri ancora... beh, se devi correre come un forsennato
+% e usare la speed solo per arrivare dopo, tanto vale lasciarli lì.
+% ===============================================================
+
+not_worth(barrel(X,Y,Q)) :-
+    nearest_barrel(player_pos(_,_), barrel(X,Y,Q), D_ours),
+    nearest_barrel(enemy_pos(EX,EY),  barrel(X,Y,Q), D_others),
+    D_ours/2 >= D_others/2. %    has_speed(enemy_pos(EX,EY)),
+
+not_worth(barrel(X,Y,Q)) :-
+    nearest_barrel(player_pos(_,_), barrel(X,Y,Q), D_ours),
+    nearest_barrel(enemy_pos(EX,EY),  barrel(X,Y,Q), D_others),
+    D_others <= 2, D_ours < 2.
+
+
+% ===============================================================
+%                           Cluster
+% ===============================================================
+% I pirati, si sa, hanno il fiuto per le scorte abbondanti.
+% Un solo barile? Meh... Ma un'intera congrega di botti ravvicinate?
+% Un vero tesoro liquido!
+%
+% Un cluster è la posizione di un barile che ha altri barili nei paraggi,
+% e quei barili a loro volta hanno altri barili vicini, e così via,
+% creando una rete ben fornita di rum da saccheggiare... con classe.
+% ===============================================================
+
+close_barrel(BX1,BY1,BX2,BY2) :-
+    barrel(BX1,BY1,_), barrel(BX2,BY2,_),
+    cell(BX1,BY1) != cell(BX2,BY2),
+    distance(D, cell(BX1,BY1), cell(BX2,BY2)),
+    D <= 2.
+
+close_barrel(BX1,BY1,BX3,BY3) :-
+    barrel(BX1,BY1,_), barrel(BX2,BY2,_), barrel(BX3,BY3,_),
+    cell(BX1,BY1) != cell(BX2,BY2), cell(BX2,BY2) != cell(BX3,BY3),
+    close_barrel(BX1,BY1, BX2,BY2), close_barrel(BX2,BY2,BX3,BY3).
+
+cluster_score(BX,BY,Count) :-
+    barrel(BX,BY,_),
+    Count = #count{BX2,BY2 : close_barrel(BX,BY,BX2,BY2)}.
+
+#show cluster_score/3.
+nearest_barrel_score(barrel(X,Y,Q), S) :- nearest_barrel(player_pos(_,_), barrel(X,Y,Q),_), cluster_score(X,Y,S), S>0.
+best_score(barrel(X,Y,Q)) :- nearest_barrel_score(barrel(X,Y,Q), S), S = #max{Score : nearest_barrel_score(_, Score)}.
+valid_cluster :- nearest_barrel_score(_,_).
+
+
+% ===============================================================
+% Speed utilities.
+% Descrizione: la speed consuma 4 di rum ogni round,
+%              i pirati devono decidere con attenzione quando usarla:
+%              - se il barile vale abbastanza da compensare il costo,
+%              - se il nemico punta al nostro barile e possiamo batterlo,
+%              - se il nemico è molto vicino e vogliamo prenderci il rum prima.
+% ===============================================================
+
+% -------- Speed se il barile ripaga il costo del boost --------
+speed_required(barrel(X,Y,Q)) :-
+    barrel(X,Y,Q),
+    player(PX,PY,Health,_,_),
+    distance(D, cell(X,Y), cell(PX,PY)),
+    Cost = (D/2)*4,
+    Cost <= Q,
+    Health > Cost,
+    nearest_enemy(_, D_e), D_e >= 8,
+    not enjoy_rum.
+
+% -------- Speed se il nemico punta al nostro stesso barile --------
+speed_required(barrel(X,Y,Q)) :-
+    nearest_barrel(enemy_pos(EX,EY), barrel(X,Y,Q), D_e),
+    nearest_barrel(player_pos(PX,PY), barrel(X,Y,Q), D_p),
+    D_p/2 < D_e, D_p >= D_e.
+
+% -------- Speed se il nemico è molto vicino a noi e punta al nostro stesso barile --------
+speed_required(barrel(X,Y,Q)) :-
+    nearest_barrel(enemy_pos(EX,EY), barrel(X,Y,Q), D_e),
+    nearest_barrel(player_pos(PX,PY), barrel(X,Y,Q), D_p),
+    distance(D, cell(EX,EY), cell(PX,PY)),
+    D <= 3,
+    D_p < D_e,
+    D_p != 1.
+
+% -------- Speed attiva se il barile scelto la richiede --------
+speed :- in(X,Y), speed_required(barrel(X,Y,_)), not aggStaCalm.
+% -------- Speed sempre disattiva però se siamo vicini ad una mina --------
+aggStaCalm :- player_pos(XP,YP), mine(XM,YM), distance(D,cell(XP,YP),cell(XM,YM)), D<3.
+
+% ===============================================================
+% enemy_is_approaching => è un flag per far svegliare il pirata mentre sta bevendo il rum
+% ===============================================================
+
+enemy_near_player(D) :-
+    player_pos(PX,PY),
+    enemy_pos(EX,EY),
+    distance(D, cell(PX,PY), cell(EX,EY)).
+
+enemy_near_target(D) :-
+    in(BX,BY),
+    barrel(BX,BY,_),
+    enemy_pos(EX,EY),
+    distance(D, cell(EX,EY), cell(BX,BY)).
+
+enemy_is_approaching :- enemy_near_player(D), D <= 4.
+enemy_is_approaching :- enemy_near_target(D), D <= 5.
+
+
+% ===============================================================
+%                      Bevi, che domani si combatte
+%                           (drunk strategy)
+% ===============================================================
+% È risaputo che i pirati sono amanti del rum. E non parliamo di
+% sorsetti eleganti: lo vogliono tutto, subito, e magari pure
+% senza faticare troppo.
+%
+% Questa strategia segue il loro spirito ingordo e pigro:
+%
+% 1. Cluster o niente: se c'è un bel grappolo di barili vicini (un “cluster”),
+%    ci si fiondano senza pensarci due volte. Perché rincorrere un singolo
+%    barile quando puoi tuffarti in una pozza di rum?
+%
+% 2. Il più grosso: se non c'è un cluster, il pirata si consola con il
+%    barile più succoso. Il più grande. Quello che, a occhio, pesa più di lui.
+%
+% 3. Slow sipping: se nelle vicinanze non ci sono nemici e il tempo lo consente,
+%    il pirata si gusta il rum con calma. Perché correre? Tanto l’oceano è loro.
+%
+% 4. Neanche una goccia: se bere quel barile significa superare i 100 di vita,
+%    ci pensano due volte. Sprecare rum è un sacrilegio. Meglio aspettare.
+%
+% 5. Allerta rossa: se c'è puzza di nemico nei paraggi o se un altro sta
+%    puntando al nostro stesso barile, scatta l’allarme! In quel caso: o si corre
+%    con la speed, o si cambia piano.
+% ===============================================================
+
+in(X,Y) | out(X,Y) :- nearest_barrel(player_pos(_,_), barrel(X,Y,_),_), drunk.
+in(X,Y) | out(X,Y) :- player_pos(X,Y), enjoy_rum, drunk.
+
+% 1. Cluster o niente
+:~ in(X,Y), barrel(X,Y,Q), not best_score(barrel(X,Y,Q)), valid_cluster, drunk. [5@1]
+
+% 2. Il più grosso: se non c'è un cluster
+:~ in(X,Y), barrel(X,Y,Q), not juiciest_barrel(barrel(X,Y,Q)), drunk. [5@1]
+
+% 3,4. Slow sipping & Neanche una goccia
+enjoy_rum :-
+    player_pos(X,Y),
+    distance(D, cell(X,Y), cell(BX,BY)), D <= 2,
+    barrel(BX,BY,Q), player(X,Y,H,_,_), (H+Q) > 100,
+    not enemy_is_approaching.
+
+:~ enjoy_rum, player_pos(X,Y), not in(X,Y), drunk. [100@1]
+
+% Se il rum è più vicino ad un avversario glielo lasciamo...
+:~ in(X,Y), not_worth(barrel(X,Y,_)), drunk. [10@1]
+
+
+% ===============================================================
+%                      Sciabola & Malumore
+%                       (attack strategy)
+% ===============================================================
+% I pirati non amano le risse… almeno finché il rum scorre a fiumi.
+%
+% Ma se il carico inizia a scarseggiare (meno di 5 barili all’orizzonte)
+% e il nemico sembra un po’ troppo minaccioso, allora forse… forse conviene
+% tornare a bersi l’ultima goccia.
+%
+% Tuttavia, se la ciurma è in splendida forma e la salute del nostro capitano
+% supera la somma delle forze nemiche messe insieme, allora sì: si combatte!
+%
+% Ma niente duelli insensati: si attacca solo se abbiamo più salute
+% del nemico bersaglio. I pirati amano vincere, non affondare.
+%
+% E poi se per caso il rum è più vicino del nemico, si fa un brindisi
+% e si aspetta che passi la tempesta. Prima si beve, poi si combatte.
+% ===============================================================
+in(X,Y) | out(X,Y) :- nearest_enemy(E,_), alive(E), E=enemy_pos(X,Y), attack.
+
+rum_nearer_then_enemy :-
+    nearest_barrel(player_pos(_,_), _, D_rum),
+    nearest_enemy(enemy_pos(_,_), D_enemy),
+    D_rum <= D_enemy/2.
+
+:~ rum_nearer_than_enemy, attack. [105@1]
+:- in(X,Y), not more_health_than(enemy_pos(X,Y)), attack.
+%:- attack, not attack_all_feasible, n_barrels(N), N < 5.
+
+attack_all_feasible :- player(_,_,PH,_,_), #sum{EH,X,Y : enemy(X,Y,EH,_,_)} < PH.
+
+% ===============================================================
+%                        Guess strategy
+% ===============================================================
+attack | drunk.
+
+% ===============================================================
+%                           Output
+%           (che verrà dato in pasto al pathfinding)
+% ===============================================================
+choose(X,Y,1) :- in(X,Y), not speed.
+choose(X,Y,2) :- in(X,Y), speed, player_pos(PX,PY), not neighbors(cell(X,Y), cell(PX,PY)).
+choose(X,Y,1) :- in(X,Y), speed, player_pos(PX,PY), neighbors(cell(X,Y), cell(PX,PY)).
+:- #count{X,Y : in(X,Y)} != 1.
+
+
+#show choose/3.
+#show attack/0.
+#show player_pos/2.
+#show drunk/0.
+#show speed/0.
+#show rum_nearer_then_enemy/0.
+#show enjoy_rum/0.
+#show not_worth/2.
+#show nearest_barrel_score/2.
+#show best_score/1.
+#show unsafe/2.
+#show enemy_is_approaching/0.
+
+
+% ===============================================================
+% Utilties varie su salute, collisioni, stato di gioco.
+% (create per la strategia di attacco, non creata per mancanza di tempo)
+% ===============================================================
+
+%n_enemies(N) :- N = #count{X,Y : enemy_pos(X,Y)}.
+n_barrels(N) :- N = #count{X,Y : barrel(X,Y,_)}.
+%exist_barrel :- barrel(_,_,_).
+%has_speed(enemy_pos(X,Y)) :- enemy(X,Y,_,2,_).
+alive(enemy_pos(X,Y)) :- enemy(X,Y,H,_,_), H>0.
+more_health_than(enemy_pos(X,Y)) :- enemy(X,Y, H_e, _,_), player(_,_, H_p,_,_), H_e <= H_p-30.
+%more_health_than(enemy_pos(X,Y)) :- enemy_pos(X,Y), not less_health_than(enemy_pos(X,Y)).
+%more_health :- n_enemies(N), #count{E : more_health_than(E)} = N.
+
+%can_handle(enemy_pos(X,Y),H) :- enemy(X,Y,H_raw,_,_), H = H_raw/10.
+%can_handle(player_pos(X,Y),H) :- player(X,Y,H_raw,_,_), H = H_raw/10.
+%can_hit(enemy_pos(X,Y)) :- can_handle(enemy_pos(X,Y), H_e), can_handle(player_pos(_,_), H_p), H_e < H_p.
+%max_steps_with_speed(X) :- player(_,_,H,_,_), X = H/2.
+#show enemy_near_target/1.
+#show enemy_near_player/1.
