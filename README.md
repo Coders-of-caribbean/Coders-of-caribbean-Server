@@ -24,24 +24,49 @@ Thanks to its modular logic-driven design, this architecture allows rapid experi
 
 ---
 
+## 🔄 Client–Server Communication
+
+Communication is based on **REST APIs** and **JSON** messages.
+
+All endpoints are exposed under:
+
+/api/v1/
+
+yaml
+Copia codice
+
+Cross-origin requests are enabled to allow external clients to connect.
+
+---
+
+## 📥 Solve Endpoint
+
+**POST** `/api/v1/solve`
+
+- The request body is deserialized into an `Input` Java Bean.
+- The `Input` contains a map of solver names to solver-specific game data.
+- Only solvers whose **bean name** appears in the input are executed.
+
+Solvers are Spring-managed **Java Beans**, automatically injected into the controller.
+
+---
+
+## ⚙️ Solver Execution
+
+- Each solver runs **concurrently** using `CompletableFuture`.
+- Execution is handled by a shared `ExecutorService`.
+- Results are collected in a shared `Output` object.
+- Thread safety is ensured via synchronized access.
+- The response is returned once all solvers have completed.
+
+---
+
 ## 🔧 Technology Stack
 
 - **Java** – Main server language.
 - **EmbASP** – Logic programming integration framework.
 - **ASP Solvers** – Compatible with [Clingo](https://potassco.org/clingo/) and [DLV](https://www.dlvsystem.com/).
 - **Maven** – For dependency management and build automation.
-
----
-
-## 📁 Repository Structure
-
-While the repository structure may evolve, it typically includes:
-
-- `src/` – Java source code for server logic.
-- `resources/` – ASP encoding files and domain logic.
-- `solver/` – Logic interface modules and solver adapters.
-- `game/` –  Game-specific domain model definitions.
-- `test/` – Unit and integration tests (unused)
 
 ---
 
