@@ -32,9 +32,6 @@ All endpoints are exposed under:
 
 /api/v1/
 
-yaml
-Copia codice
-
 Cross-origin requests are enabled to allow external clients to connect.
 
 ---
